@@ -1,0 +1,57 @@
+---
+description: How to author reusable low-poly R3F primitives in src/scene/components
+globs: src/scene/components/**/*.tsx
+alwaysApply: false
+---
+
+# Low-Poly Components
+
+Each primitive is **one file** in `src/scene/components/`. Station props
+compose them; they never import from `props/`.
+
+## File template
+
+```tsx
+import { resolvePosition, type PlacementProps } from './types';
+
+const DEFAULTS = { /* geometry + colors */ } as const;
+
+export interface MyThingProps extends PlacementProps {
+  color?: string;
+}
+
+export function MyThing({ color = DEFAULTS.color, ...placement }: MyThingProps) {
+  return (
+    <group position={resolvePosition(placement)}>
+      <mesh castShadow>
+        <boxGeometry args={[…]} />
+        <meshStandardMaterial color={color} flatShading roughness={1} />
+      </mesh>
+    </group>
+  );
+}
+```
+
+## Rules
+
+- **One component per file** — filename matches export (`Tree.tsx` → `Tree`).
+- **Export from `index.ts`** — add the component + its `*Props` type to the barrel.
+- **`DEFAULTS` at top** — geometry args and default colors live in a `const DEFAULTS`.
+- **Customize via props** — expose `color`, `height`, `scale`, `accent`, etc.; never
+  hard-code station-specific values inside a primitive.
+- **Placement** — extend `PlacementProps` (`x`/`y`/`z` or `position`); use
+  `resolvePosition()` for the root `<group>`.
+- **Accent glow** — extend `AccentProps` when the piece uses `emissive`.
+- **No `useFrame`** in primitives unless the component owns its animation (e.g.
+  `GlowingOrb` with `floating`). Keep primitives mostly static meshes.
+- **Low-poly** — `flatShading`, low segment counts (4–12), `castShadow` on solids.
+
+## When to extract vs. keep inline
+
+| Extract to `components/` | Keep in `*Props.tsx` |
+|------------------------|----------------------|
+| Used on 2+ islands | Used once, very station-specific (hero gate arch) |
+| Generic shape (tree, pillar, medal) | Layout that only makes sense in one scene |
+| Likely reused in future islands | Composed arrangement of many unique meshes |
+
+Use the `create-low-poly-component` skill when adding a new primitive.

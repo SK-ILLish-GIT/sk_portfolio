@@ -1,0 +1,23 @@
+---
+description: Lint, format, and type-check workflow for this repo
+alwaysApply: true
+---
+
+# Tooling & Quality Gates
+
+Before considering a change done, it must pass:
+
+```bash
+npm run lint        # ESLint (flat config, eslint.config.js)
+npm run format      # Prettier write (or format:check in CI)
+npm run typecheck   # tsc --noEmit
+npm run build       # tsc && vite build
+```
+
+- A husky `pre-commit` hook runs `lint-staged` + `typecheck`. Never bypass it
+  with `--no-verify`.
+- ESLint is the source of truth for code rules; Prettier owns formatting
+  (`eslint-config-prettier` disables conflicting style rules).
+- Prefix intentionally-unused vars/args with `_` to satisfy `no-unused-vars`.
+- Don't add comments that just narrate code. Comment intent, trade-offs, or
+  non-obvious constraints only.

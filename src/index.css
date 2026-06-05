@@ -56,7 +56,9 @@ canvas {
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   opacity: 0;
-  transition: opacity 0.5s ease, transform 0.5s ease;
+  transition:
+    opacity 0.5s ease,
+    transform 0.5s ease;
   pointer-events: auto;
 }
 
@@ -197,7 +199,9 @@ canvas {
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.65);
   border: 1px solid rgba(0, 0, 0, 0.06);
-  transition: transform 0.15s ease, background 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    background 0.15s ease;
 }
 .contact-links a:hover {
   transform: translateY(-2px);
@@ -236,7 +240,9 @@ canvas {
   background: transparent;
   cursor: pointer;
   padding: 0;
-  transition: transform 0.2s ease, background 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease;
   position: relative;
 }
 .nav-dots button:hover {
@@ -323,9 +329,17 @@ canvas {
   animation: wheel 1.4s infinite;
 }
 @keyframes wheel {
-  0% { opacity: 0; transform: translate(-50%, 0); }
-  40% { opacity: 1; }
-  100% { opacity: 0; transform: translate(-50%, 8px); }
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 0);
+  }
+  40% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, 8px);
+  }
 }
 
 .loader {
@@ -339,6 +353,126 @@ canvas {
   color: var(--ink);
   font-size: 20px;
   font-weight: 700;
+}
+
+/* ---------------- World loader (cinematic intro) ---------------- */
+.world-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  overflow: hidden;
+  pointer-events: auto;
+  background:
+    radial-gradient(120% 80% at 50% -10%, #1b3a5e 0%, transparent 55%),
+    linear-gradient(180deg, #060d1c 0%, #0a1730 55%, #0d0a1f 100%);
+  transition:
+    background 1s ease,
+    opacity 0.9s ease;
+}
+.world-loader.is-intro {
+  background: transparent;
+  opacity: 0;
+}
+
+.world-loader .wl-mist {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(60% 40% at 20% 70%, rgba(120, 170, 220, 0.18), transparent 70%),
+    radial-gradient(50% 35% at 80% 30%, rgba(150, 255, 235, 0.12), transparent 70%);
+  filter: blur(6px);
+  animation: wlMist 9s ease-in-out infinite alternate;
+}
+@keyframes wlMist {
+  0% {
+    transform: translateX(-3%);
+    opacity: 0.7;
+  }
+  100% {
+    transform: translateX(3%);
+    opacity: 1;
+  }
+}
+
+.world-loader .wl-caption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: clamp(48px, 12vh, 120px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+  transition: opacity 0.6s ease;
+}
+.world-loader.is-intro .wl-caption,
+.world-loader.is-intro .wl-mist {
+  opacity: 0;
+}
+.world-loader .wl-sub {
+  font-size: 12px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #9fc6e6;
+}
+.world-loader .wl-progress-track {
+  width: min(280px, 72vw);
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+}
+.world-loader .wl-progress-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #7ee8d4, #96ffeb);
+  box-shadow: 0 0 12px rgba(150, 255, 235, 0.6);
+  transition: width 0.15s ease-out;
+}
+.world-loader .wl-pct {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: rgba(159, 198, 230, 0.75);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------------- Loader fireflies ---------------- */
+.world-loader .wl-fireflies {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.world-loader .wl-firefly {
+  position: absolute;
+  border-radius: 50%;
+  background: #d6fff4;
+  box-shadow: 0 0 8px 2px rgba(150, 255, 235, 0.85);
+  opacity: 0.5;
+  animation-name: wlFirefly;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+}
+@keyframes wlFirefly {
+  0% {
+    transform: translate(0, 0);
+    opacity: 0.15;
+  }
+  50% {
+    opacity: 0.95;
+  }
+  100% {
+    transform: translate(var(--dx), var(--dy));
+    opacity: 0.35;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .world-loader .wl-firefly,
+  .world-loader .wl-mist {
+    animation: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

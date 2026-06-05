@@ -1,0 +1,37 @@
+---
+description: React Three Fiber performance and authoring conventions
+globs: src/scene/**/*.tsx,src/hooks/**/*.ts
+alwaysApply: false
+---
+
+# R3F Conventions
+
+## Never allocate in the render loop
+
+`useFrame` runs ~60×/sec. Allocating objects there causes GC churn. Hoist them
+into `useRef` (or module scope) and mutate in place. This is enforced by the
+`@react-three/no-new-in-loop` ESLint rule.
+
+```tsx
+// ❌ BAD
+useFrame(() => {
+  const v = new THREE.Vector3(0, 1, 0); // new alloc every frame
+  mesh.current.position.lerp(v, 0.1);
+});
+
+// ✅ GOOD
+const v = useRef(new THREE.Vector3(0, 1, 0));
+useFrame(() => {
+  mesh.current.position.lerp(v.current, 0.1);
+});
+```
+
+## Other conventions
+
+- Guard ref access: `if (!ref.current) return;` at the top of `useFrame`.
+- Low-poly look: use `flatShading` and low geometry segment counts.
+- Animate materials/lights via refs in `useFrame`; don't trigger React re-renders.
+- Drive shared animation phases from `src/config/intro.ts` so loader, camera,
+  hero gate, and creature stay in sync.
+- One station's props per file in `src/scene/props/`; compose reusable meshes from
+  `src/scene/components/` (see `low-poly-components` rule).

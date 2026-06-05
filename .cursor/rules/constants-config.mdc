@@ -1,0 +1,29 @@
+---
+description: Centralize scene tuning constants instead of scattering magic numbers
+alwaysApply: true
+---
+
+# Constants live in src/config
+
+In R3F, positions, colors, intensities, and timings multiply fast. Keep the
+*tunable* ones in `src/config/` so the scene can be tweaked in one place.
+
+- **Cross-cutting / reused** numbers (camera, lights, fog, scroll, island radii,
+  intro timings, creature orbit/flight) → `src/config/*.ts`.
+- **Purely local** geometry args inside a single prop component (a mesh's
+  `boxGeometry args`) may stay inline — but group them and pull repeated values
+  into a `const` at the top of the file (see `PILLAR_X` in `HeroProps.tsx`).
+
+## Examples
+
+```ts
+// ❌ BAD — magic numbers buried in JSX
+camera={{ fov: 45, position: [0, 3, 12], near: 0.1, far: 200 }}
+
+// ✅ GOOD — from src/config/scene.ts
+import { CAMERA } from '../config/scene';
+camera={{ fov: CAMERA.fov, position: CAMERA.position, near: CAMERA.near, far: CAMERA.far }}
+```
+
+- Type 3D tuples as `Vec3` from `src/types/three.ts`.
+- Use `as const` on config objects so values stay literal/readonly.

@@ -1,0 +1,28 @@
+---
+description: Where code lives in this R3F portfolio and what each folder owns
+alwaysApply: true
+---
+
+# Project Structure
+
+This is a React + TypeScript + React Three Fiber (R3F) 3D portfolio built with Vite.
+
+| Folder | Owns |
+|--------|------|
+| `src/config/` | Tunable constants only — camera, lights, fog, scroll, intro timings, creature motion. No JSX. |
+| `src/data/` | Content (the single source of truth: `portfolio.ts`) + content types. |
+| `src/lib/` | Pure, framework-free helpers (`prng.ts`, `math.ts`). No React, no THREE side effects. |
+| `src/hooks/` | Reusable React hooks (e.g. `useCreatureMotion`). |
+| `src/types/` | Shared TypeScript types (e.g. `Vec3`). |
+| `src/scene/` | The 3D world: `Experience` (Canvas root), `CameraRig`, `Island`, `Clouds`. |
+| `src/scene/components/` | Reusable low-poly primitives (`Tree`, `Mailbox`, …) — one file each, barrel-exported from `index.ts`. |
+| `src/scene/props/` | One file per station's 3D layout (`HeroProps`, `AboutProps`, …) + `index.tsx` dispatcher. Composes `components/`. |
+| `src/scene/creatures/` | Guide-creature registry + renderers (`GuideCreature`, `ModelCreature`, `ProceduralCreature`). |
+| `src/ui/` | HTML/DOM overlay (`Overlay`, `Nav`, `Loader`). Lives outside the Canvas. |
+
+## Rules
+
+- Add a new section by editing `src/data/portfolio.ts` (`stations`) and adding a `*Props.tsx` file wired into `props/index.tsx`.
+- Never duplicate a helper — put it in `src/lib/` and import it (e.g. `mulberry32`).
+- Reusable 3D meshes → `src/scene/components/`; station-specific layouts → `src/scene/props/`.
+- Keep DOM/UI in `src/ui/`; keep 3D in `src/scene/`. Don't mix.

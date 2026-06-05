@@ -1,9 +1,12 @@
 import { useMemo, type ReactNode } from 'react';
 import * as THREE from 'three';
 import { Float } from '@react-three/drei';
+import { mulberry32 } from '../lib/prng';
+import { ISLAND } from '../config/scene';
+import type { Vec3 } from '../types/three';
 
 interface IslandProps {
-  position: [number, number, number];
+  position: Vec3;
   accent: string;
   radius?: number;
   seed?: number;
@@ -15,13 +18,7 @@ interface IslandProps {
  * rocky cone underside, with a few procedurally scattered bushes/rocks.
  * Knows nothing about content — props are placed on top via `children`.
  */
-export default function Island({
-  position,
-  accent,
-  radius = 4,
-  seed = 1,
-  children,
-}: IslandProps) {
+export default function Island({ position, accent, radius = ISLAND.defaultRadius, seed = 1, children }: IslandProps) {
   const bushes = useMemo(() => {
     const rng = mulberry32(Math.floor(seed * 9973) + 7);
     const count = 5;
@@ -76,15 +73,4 @@ export default function Island({
       </group>
     </Float>
   );
-}
-
-// Tiny deterministic PRNG so islands look identical across reloads.
-function mulberry32(a: number) {
-  return function () {
-    a |= 0;
-    a = (a + 0x6d2b79f5) | 0;
-    let t = Math.imul(a ^ (a >>> 15), 1 | a);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
 }

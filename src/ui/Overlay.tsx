@@ -14,11 +14,15 @@ import {
 export default function Overlay({ active }: { active: number }) {
   return (
     <div className="overlay">
-      {stations.map((s, i) => (
-        <div key={s.id} className={`panel ${i === active ? 'is-active' : ''}`} aria-hidden={i !== active}>
-          <Panel id={s.id} accent={s.accent} />
-        </div>
-      ))}
+      {stations.map((s, i) => {
+        // Welcome content lives on the 3D gate — no duplicate HTML card.
+        if (s.id === 'hero') return null;
+        return (
+          <div key={s.id} className={`panel ${i === active ? 'is-active' : ''}`} aria-hidden={i !== active}>
+            <Panel id={s.id} accent={s.accent} />
+          </div>
+        );
+      })}
     </div>
   );
 }

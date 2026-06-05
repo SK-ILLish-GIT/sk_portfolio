@@ -9,7 +9,7 @@ interface NavProps {
 export default function Nav({ active, count, onGoTo }: NavProps) {
   return (
     <>
-      <div className="brand">
+      <div className="brand" style={{ opacity: active === 0 ? 0 : 1 }}>
         {profile.name}
         <span>{profile.title}</span>
       </div>
