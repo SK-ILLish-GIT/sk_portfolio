@@ -68,15 +68,28 @@ export const CAMERA_RIG = {
 
 // ----------------------------------------------------------------------------
 // Clouds: drifting low-poly puffs that fill the background.
+// Islands occupy y ≈ -1.5…2 (bottoms down to ~-5.8, tops up to ~5.8), so puffs
+// are kept in two bands — a low "sea" below and a high deck above — and never
+// drift through that middle slab.
 // ----------------------------------------------------------------------------
 export const CLOUDS = {
-  count: 22,
+  count: 26,
   seed: 42,
-  spreadX: 40,
-  spreadY: 14,
+  spreadX: 44,
+  /** Share of puffs forming the low cloud sea (rest sit in the high deck). */
+  lowFraction: 0.6,
+  /** Low sea: tops at lowY, extending downward by lowYRange. */
+  lowY: -8,
+  lowYRange: 7,
+  /** High deck: bottoms at highY, extending upward by highYRange. */
+  highY: 9,
+  highYRange: 7,
   minScale: 1,
   scaleRange: 2,
   minSpeed: 0.2,
   speedRange: 0.4,
   wrapX: 24,
+  /** Gentle vertical bob so each layer feels alive (per-puff phase). */
+  bobAmplitude: 0.5,
+  bobSpeed: 0.25,
 } as const;

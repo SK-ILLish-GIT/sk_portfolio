@@ -33,4 +33,15 @@ export const FOLLOW = {
   travelLerp: 0.04,
   bankGain: 2.5,
   bankLerp: 0.12,
+  /** Gentle vertical bob layered onto the travel offset for life. */
+  travelBob: { amplitude: 0.4, speed: 1.1 },
+  /**
+   * Heading the creature faces = the direction it is actually travelling along
+   * the island path, so it flies nose-first whether scrolling forward or back.
+   */
+  headingLerp: 0.09,
+  /** Path movement below this (per frame) leaves the heading unchanged. */
+  headingDeadzone: 0.0008,
+  /** How far ahead the look target sits along the heading. */
+  lookDistance: 6,
 } as const;

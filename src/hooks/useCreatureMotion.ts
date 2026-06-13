@@ -28,6 +28,11 @@ export function useCreatureMotion(bodyRef: RefObject<THREE.Object3D>, phase: Pha
   const far = useRef(new THREE.Vector3(...CREATURE_ENTRY));
   const prevPos = useRef(new THREE.Vector3());
   const bank = useRef(0);
+  // Pure (sway-free) path point + the smoothed travel heading it produces.
+  const base = useRef(new THREE.Vector3(...stations[0].position));
+  const basePrev = useRef(new THREE.Vector3(...stations[0].position));
+  const heading = useRef(new THREE.Vector3(0, 0, -1));
+  const lookTarget = useRef(new THREE.Vector3());
   const scroll = useScroll();
 
   useFrame((state) => {
@@ -72,16 +77,39 @@ export function useCreatureMotion(bodyRef: RefObject<THREE.Object3D>, phase: Pha
     const f = p - i;
     islandA.current.set(...stations[i].position);
     islandB.current.set(...stations[i + 1].position);
-    tmp.current.lerpVectors(islandA.current, islandB.current, f);
+
+    // Sway-free path point: its frame-to-frame delta is the true travel
+    // direction (forward or backward), which the creature turns to face. This
+    // ignores hover sway so an idle creature keeps its last heading instead of
+    // drifting sideways.
+    base.current.lerpVectors(islandA.current, islandB.current, f);
+    tmp.current.subVectors(base.current, basePrev.current);
+    const moved = tmp.current.length();
+    if (moved > FOLLOW.headingDeadzone) {
+      tmp.current.divideScalar(moved);
+      heading.current.lerp(tmp.current, FOLLOW.headingLerp);
+    }
+    basePrev.current.copy(base.current);
+
+    // Position target: path point + hover offset, sway, and a vertical bob.
+    tmp.current.copy(base.current);
     tmp.current.x += Math.sin(now * FOLLOW.offset.swaySpeed) * FOLLOW.offset.sway;
-    tmp.current.y += FOLLOW.offset.y;
+    tmp.current.y += FOLLOW.offset.y + Math.sin(now * FOLLOW.travelBob.speed) * FOLLOW.travelBob.amplitude;
     tmp.current.z += FOLLOW.offset.z;
     g.position.lerp(tmp.current, FOLLOW.travelLerp);
-    g.lookAt(islandA.current.x, islandA.current.y + 1, islandA.current.z);
 
     const dx = g.position.x - prevPos.current.x;
     bank.current = THREE.MathUtils.lerp(bank.current, dx * FOLLOW.bankGain, FOLLOW.bankLerp);
-    g.rotation.z = bank.current;
+
+    // Face the travel direction, then roll for banking about the local forward
+    // axis. Rolling via rotateZ (not g.rotation.z) avoids the Euler flip that
+    // left the bird upside down when heading away from the camera (−Z). The
+    // guard skips the brief zero-length heading during a scroll U-turn.
+    if (heading.current.lengthSq() > 0.04) {
+      lookTarget.current.copy(g.position).addScaledVector(heading.current, FOLLOW.lookDistance);
+      g.lookAt(lookTarget.current);
+      g.rotateZ(bank.current);
+    }
     prevPos.current.copy(g.position);
   });
 }
