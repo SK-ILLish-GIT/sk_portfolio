@@ -4,6 +4,8 @@
 // `position` is the island's location in 3D space; `accent` is its theme color.
 // ============================================================================
 
+import { mulberry32 } from '../lib/prng';
+
 export type StationId =
   | 'hero'
   | 'about'
@@ -186,9 +188,10 @@ export const contactLinks: ContactLink[] = [
 ];
 
 // ----------------------------------------------------------------------------
-// Layout: island position + accent color per station, in scroll order.
-// Islands sit on the sea (y = 0) and zig-zag forward (negative Z) so the boat
-// weaves between them as it sails the voyage.
+// Layout: island metadata in voyage order. Positions are generated from a fixed
+// seed so the archipelago is scattered (varied gaps + side-to-side weave) yet
+// deterministic — the boat sails forward (−Z) discovering islands. Tweak
+// ISLAND_LAYOUT to change spacing/spread.
 // ----------------------------------------------------------------------------
 export interface StationLayout {
   id: StationId;
@@ -197,14 +200,38 @@ export interface StationLayout {
   accent: string;
 }
 
-const Z_STEP = -18;
-export const stations: StationLayout[] = [
-  { id: 'hero', label: 'Home', position: [0, 0, 0], accent: '#ff8fab' },
-  { id: 'about', label: 'About', position: [-7, 0, Z_STEP], accent: '#ffd166' },
-  { id: 'experience', label: 'Experience', position: [7, 0, Z_STEP * 2], accent: '#06d6a0' },
-  { id: 'projects', label: 'Projects', position: [-7, 0, Z_STEP * 3], accent: '#4cc9f0' },
-  { id: 'skills', label: 'Skills', position: [7, 0, Z_STEP * 4], accent: '#b5179e' },
-  { id: 'education', label: 'Education', position: [-6, 0, Z_STEP * 5], accent: '#f4a261' },
-  { id: 'certifications', label: 'Certs', position: [7, 0, Z_STEP * 6], accent: '#90be6d' },
-  { id: 'contact', label: 'Contact', position: [0, 0, Z_STEP * 7], accent: '#9b5de5' },
+const ISLAND_LAYOUT = {
+  seed: 21,
+  /** Forward (−Z) gap between consecutive islands: base + up to jitter. */
+  gap: 26,
+  gapJitter: 14,
+  /** Sideways spread (±x). Consecutive islands lean to opposite sides. */
+  spread: 13,
+} as const;
+
+const stationMeta: Omit<StationLayout, 'position'>[] = [
+  { id: 'hero', label: 'Home', accent: '#ff8fab' },
+  { id: 'about', label: 'About', accent: '#ffd166' },
+  { id: 'experience', label: 'Experience', accent: '#06d6a0' },
+  { id: 'projects', label: 'Projects', accent: '#4cc9f0' },
+  { id: 'skills', label: 'Skills', accent: '#b5179e' },
+  { id: 'education', label: 'Education', accent: '#f4a261' },
+  { id: 'certifications', label: 'Certs', accent: '#90be6d' },
+  { id: 'contact', label: 'Contact', accent: '#9b5de5' },
 ];
+
+function buildStations(): StationLayout[] {
+  const rng = mulberry32(ISLAND_LAYOUT.seed);
+  const round = (n: number) => Math.round(n * 10) / 10;
+  let z = 0;
+  return stationMeta.map((m, i) => {
+    if (i === 0) return { ...m, position: [0, 0, 0] };
+    z -= ISLAND_LAYOUT.gap + rng() * ISLAND_LAYOUT.gapJitter;
+    // Weave: alternate sides each step, with a random magnitude.
+    const side = i % 2 === 0 ? 1 : -1;
+    const x = side * (0.35 + rng() * 0.65) * ISLAND_LAYOUT.spread;
+    return { ...m, position: [round(x), 0, round(z)] };
+  });
+}
+
+export const stations: StationLayout[] = buildStations();

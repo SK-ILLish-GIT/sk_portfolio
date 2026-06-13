@@ -5,13 +5,13 @@ import { RigidBody, CuboidCollider, type RapierRigidBody } from '@react-three/ra
 import { stations } from '../data/portfolio';
 import { ISLAND } from '../config/scene';
 import { BOAT, BOAT_PHYSICS } from '../config/ocean';
+import { SAILBOAT } from '../config/boats';
 import type { Phase } from '../config/intro';
 import { waveHeight } from '../lib/waves';
-import { Boat } from './components';
+import { BoatModel } from './components';
 
 interface BoatControllerProps {
   phase: Phase;
-  accent: string;
   bodyRef: React.MutableRefObject<RapierRigidBody | null>;
   input: React.MutableRefObject<{ forward: number; turn: number; anchor: boolean }>;
   headingRef: React.MutableRefObject<number>;
@@ -24,6 +24,14 @@ interface BoatControllerProps {
 
 const FORWARD = new THREE.Vector3(0, 0, 1);
 
+// Playable sea bounds derived from the island layout (+ margin), so the soft
+// walls always wrap the archipelago however it's scattered.
+const BOUNDS = {
+  maxX: Math.max(...stations.map((s) => Math.abs(s.position[0]))) + 16,
+  maxZ: Math.max(...stations.map((s) => s.position[2])) + 16,
+  minZ: Math.min(...stations.map((s) => s.position[2])) - 16,
+};
+
 /**
  * The player's boat as a dynamic Rapier body. Only yaw is simulated (pitch/roll
  * are faked on the model for stability); a buoyancy spring keeps it on the
@@ -31,7 +39,6 @@ const FORWARD = new THREE.Vector3(0, 0, 1);
  */
 export default function BoatController({
   phase,
-  accent,
   bodyRef,
   input,
   headingRef,
@@ -86,13 +93,12 @@ export default function BoatController({
     // Anchor (Space) brakes hard; otherwise normal water drag.
     body.setLinearDamping(inp.anchor && live ? BOAT_PHYSICS.anchorDamping : BOAT_PHYSICS.linearDamping);
 
-    // Soft bounds — nudge back toward the playable lane if we wander too far.
-    const minZ = stations[stations.length - 1].position[2] - 14;
+    // Soft bounds — nudge back toward the playable sea if we wander too far.
     const pull = BOAT_PHYSICS.boundsPull * dt;
-    if (pos.x < -22) body.applyImpulse({ x: pull, y: 0, z: 0 }, true);
-    if (pos.x > 22) body.applyImpulse({ x: -pull, y: 0, z: 0 }, true);
-    if (pos.z > 16) body.applyImpulse({ x: 0, y: 0, z: -pull }, true);
-    if (pos.z < minZ) body.applyImpulse({ x: 0, y: 0, z: pull }, true);
+    if (pos.x < -BOUNDS.maxX) body.applyImpulse({ x: pull, y: 0, z: 0 }, true);
+    if (pos.x > BOUNDS.maxX) body.applyImpulse({ x: -pull, y: 0, z: 0 }, true);
+    if (pos.z > BOUNDS.maxZ) body.applyImpulse({ x: 0, y: 0, z: -pull }, true);
+    if (pos.z < BOUNDS.minZ) body.applyImpulse({ x: 0, y: 0, z: pull }, true);
 
     // Visual lean: tilt the model into turns + gentle wave roll/pitch.
     const speed = Math.hypot(lin.x, lin.z) / BOAT_PHYSICS.refSpeed;
@@ -146,7 +152,7 @@ export default function BoatController({
         mass={BOAT_PHYSICS.mass}
       />
       <group ref={model}>
-        <Boat accent={accent} scale={BOAT.scale} />
+        <BoatModel option={SAILBOAT} />
       </group>
     </RigidBody>
   );

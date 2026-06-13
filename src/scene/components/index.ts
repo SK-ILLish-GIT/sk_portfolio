@@ -4,6 +4,7 @@ export { GlowMushroom, type GlowMushroomProps } from './GlowMushroom';
 export { Building, type BuildingProps } from './Building';
 export { BlockCharacter, type BlockCharacterProps } from './BlockCharacter';
 export { Boat, type BoatProps } from './Boat';
+export { BoatModel } from './BoatModel';
 export { Banner, type BannerHandle, type BannerProps } from './Banner';
 export { Workstation, type WorkstationHandle, type WorkstationProps } from './Workstation';
 export { ModelFigure, type ModelFigureConfig, type ModelFigureProps } from './ModelFigure';

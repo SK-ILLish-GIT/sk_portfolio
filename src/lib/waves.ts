@@ -2,9 +2,9 @@
 // mesh (vertex displacement) and the Boat (bob) ride the exact same swell.
 
 const WAVES = [
-  { ax: 0.18, az: 0.0, speed: 0.9, amp: 0.32 },
-  { ax: 0.0, az: 0.22, speed: 1.1, amp: 0.26 },
-  { ax: 0.11, az: 0.13, speed: 0.6, amp: 0.16 },
+  { ax: 0.18, az: 0.0, speed: 0.9, amp: 0.1 },
+  { ax: 0.0, az: 0.22, speed: 1.1, amp: 0.07 },
+  { ax: 0.11, az: 0.13, speed: 0.6, amp: 0.05 },
 ] as const;
 
 /** World-space wave height at (x, z) and time t (seconds). */

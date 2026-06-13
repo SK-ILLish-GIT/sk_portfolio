@@ -11,9 +11,9 @@ export const RENDERER = {
 } as const;
 
 export const CAMERA = {
-  fov: 45,
+  fov: 58,
   near: 0.1,
-  far: 200,
+  far: 220,
   position: [0, 3, 12] as Vec3,
 } as const;
 
@@ -49,8 +49,8 @@ export const SCROLL = {
 } as const;
 
 export const ISLAND = {
-  heroRadius: 5.8,
-  defaultRadius: 4,
+  heroRadius: 7.2,
+  defaultRadius: 5.4,
 } as const;
 
 // ----------------------------------------------------------------------------
@@ -59,11 +59,12 @@ export const ISLAND = {
 // ----------------------------------------------------------------------------
 export const CAMERA_RIG = {
   /** Where the camera starts, out over the open sea, before the intro fly-in. */
-  introFrom: [3, 11, 30] as Vec3,
-  /** Chase offset from the boat: height, distance behind, and look-ahead distance. */
-  chase: { up: 4.5, back: 9, lookAhead: 6 },
+  introFrom: [5, 18, 42] as Vec3,
+  /** Chase offset from the boat: height, distance behind, and look-ahead distance.
+   *  Pulled back + raised for a wide, cinematic open-ocean view. */
+  chase: { up: 8.5, back: 16, lookAhead: 9 },
   /** Where the camera looks (ahead of the boat) raised a touch. */
-  lookOffset: { y: 1.2 },
+  lookOffset: { y: 1.6 },
   /** Gentle camera bob so the horizon rocks with the swell (kept subtle). */
   bobGain: 0.18,
   parallax: { x: 1.2, y: 0.6 },

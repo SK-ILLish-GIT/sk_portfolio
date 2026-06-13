@@ -1,11 +1,18 @@
 import { useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
+import { stations } from '../data/portfolio';
 import { OCEAN } from '../config/ocean';
 import { clamp01 } from '../lib/math';
 import { waveHeight } from '../lib/waves';
 
-const WAVE_AMP = 0.74; // sum of wave amplitudes in lib/waves.ts
+// Size + center the sea to cover the whole archipelago (with generous margin),
+// however far the islands are scattered.
+const zsO = stations.map((s) => s.position[2]);
+const CENTER: [number, number, number] = [0, 0, (Math.max(...zsO) + Math.min(...zsO)) / 2];
+const LENGTH = Math.max(...zsO) - Math.min(...zsO) + 200;
+
+const WAVE_AMP = 0.22; // sum of wave amplitudes in lib/waves.ts
 const DEEP = new THREE.Color(OCEAN.deepColor);
 const SURF = new THREE.Color(OCEAN.surfaceColor);
 const FOAM = new THREE.Color('#d6f0fb');
@@ -28,7 +35,7 @@ export default function Ocean() {
   // a clean baseline every frame, and seed a vertex-color buffer for the sea
   // gradient + crest foam.
   const { baseline, colors } = useMemo(() => {
-    const g = new THREE.PlaneGeometry(OCEAN.width, OCEAN.length, OCEAN.segmentsX, OCEAN.segmentsZ);
+    const g = new THREE.PlaneGeometry(OCEAN.width, LENGTH, OCEAN.segmentsX, OCEAN.segmentsZ);
     const positions = g.attributes.position.array.slice() as Float32Array;
     return { baseline: positions, colors: new Float32Array(positions.length) };
   }, []);
@@ -42,7 +49,7 @@ export default function Ocean() {
     const arr = pos.array as Float32Array;
     const carr = col.array as Float32Array;
     const t = state.clock.getElapsedTime();
-    const [cx, , cz] = OCEAN.center;
+    const [cx, , cz] = CENTER;
 
     for (let k = 0; k < arr.length; k += 3) {
       const lx = base.current[k];
@@ -66,8 +73,8 @@ export default function Ocean() {
   });
 
   return (
-    <mesh rotation={[-Math.PI / 2, 0, 0]} position={OCEAN.center} receiveShadow>
-      <planeGeometry ref={geomRef} args={[OCEAN.width, OCEAN.length, OCEAN.segmentsX, OCEAN.segmentsZ]}>
+    <mesh rotation={[-Math.PI / 2, 0, 0]} position={CENTER} receiveShadow>
+      <planeGeometry ref={geomRef} args={[OCEAN.width, LENGTH, OCEAN.segmentsX, OCEAN.segmentsZ]}>
         <bufferAttribute attach="attributes-color" args={[colors, 3]} />
       </planeGeometry>
       <meshStandardMaterial vertexColors flatShading roughness={0.5} metalness={0.05} />

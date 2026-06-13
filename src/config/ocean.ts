@@ -3,16 +3,11 @@
 // islands. Wave *shape* lives in src/lib/waves.ts (shared by mesh + boat).
 // ============================================================================
 
-import type { Vec3 } from '../types/three';
-
 export const OCEAN = {
-  /** Plane footprint (x width, z length) and tessellation. */
+  /** Plane width (x); length + center are derived from the island spread. */
   width: 320,
-  length: 260,
   segmentsX: 96,
-  segmentsZ: 78,
-  /** Centered around the middle of the voyage so it covers every island. */
-  center: [0, 0, -63] as Vec3,
+  segmentsZ: 120,
   surfaceColor: '#2f97cf',
   deepColor: '#1668a0',
 } as const;
@@ -46,7 +41,7 @@ export const BOAT = {
 export const BOAT_PHYSICS = {
   mass: 6,
   /** Forward thrust impulse per second at full throttle (W); reverse is weaker. */
-  thrust: 26,
+  thrust: 34,
   reverseFactor: 0.45,
   /** Yaw torque impulse per second (A/D). */
   turnTorque: 13,
@@ -59,14 +54,14 @@ export const BOAT_PHYSICS = {
   buoyancyK: 60,
   buoyancyC: 14,
   /** Hull rides this far above the sampled wave height (waterline offset). */
-  floatLine: 0.15,
+  floatLine: 0.35,
   /** Speed (m/s) used to normalize visual lean/bank. */
   refSpeed: 6,
   /** Soft circular bound — beyond this from the route, nudge the boat back. */
   boundsPull: 10,
   hull: { halfX: 0.7, halfY: 0.45, halfZ: 1.5 },
   /** Spawn out in front of the hero island (clear of its collider), facing it. */
-  spawn: [0, 0.15, 9.5] as [number, number, number],
+  spawn: [0, 0.35, 12] as [number, number, number],
   spawnYaw: Math.PI,
   /** Extra distance beyond an island's shoreline that still counts as "docked". */
   dockRange: 5,

@@ -81,7 +81,6 @@ export default function Experience({ setActive, setDocked, phase, headingRef, po
 
           <BoatController
             phase={phase}
-            accent={stations[0].accent}
             bodyRef={boatBody}
             input={input}
             headingRef={headingRef}

@@ -8,8 +8,16 @@ interface MinimapProps {
 }
 
 const SIZE = 156;
-// World bounds of the playable sea, mapped into the minimap square.
-const BOUNDS = { minX: -26, maxX: 26, minZ: -142, maxZ: 18 };
+// World bounds of the playable sea (from the island layout + margin), mapped
+// into the minimap square so the whole archipelago always fits.
+const M = 24;
+const xs = stations.map((s) => s.position[0]);
+const zs = stations.map((s) => s.position[2]);
+const span = Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...zs) - Math.min(...zs)) + 2 * M;
+const cx = (Math.max(...xs) + Math.min(...xs)) / 2;
+const cz = (Math.max(...zs) + Math.min(...zs)) / 2;
+// Square, centered bounds keep the map aspect-correct (no x/z stretching).
+const BOUNDS = { minX: cx - span / 2, maxX: cx + span / 2, minZ: cz - span / 2, maxZ: cz + span / 2 };
 const PAD = 14;
 const REVEAL = 26; // fog-clear radius in px around the boat
 
