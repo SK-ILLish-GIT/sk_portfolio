@@ -198,6 +198,8 @@ export interface StationLayout {
   label: string;
   position: [number, number, number];
   accent: string;
+  /** Optional island radius override (defaults by station in Experience). */
+  radius?: number;
 }
 
 const ISLAND_LAYOUT = {
@@ -215,7 +217,7 @@ const stationMeta: Omit<StationLayout, 'position'>[] = [
   { id: 'experience', label: 'Experience', accent: '#06d6a0' },
   { id: 'projects', label: 'Projects', accent: '#4cc9f0' },
   { id: 'skills', label: 'Skills', accent: '#b5179e' },
-  { id: 'education', label: 'Education', accent: '#f4a261' },
+  { id: 'education', label: 'Education', accent: '#f4a261', radius: 9.5 },
   { id: 'certifications', label: 'Certs', accent: '#90be6d' },
   { id: 'contact', label: 'Contact', accent: '#9b5de5' },
 ];

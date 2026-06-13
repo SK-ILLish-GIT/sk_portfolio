@@ -4,15 +4,25 @@ import Overlay from './ui/Overlay';
 import Nav from './ui/Nav';
 import Compass from './ui/Compass';
 import Minimap from './ui/Minimap';
+import TerrainPicker from './ui/TerrainPicker';
 import Loader from './ui/Loader';
 import { stations } from './data/portfolio';
 import { INTRO, LOADER_MS, type Phase } from './config/intro';
+import { DEFAULT_TERRAIN, TERRAINS } from './config/terrains';
+import { useTexture } from '@react-three/drei';
+
+// Preload every terrain's textures so switching in the dropdown is instant.
+TERRAINS.forEach((t) => {
+  useTexture.preload(t.grass);
+  useTexture.preload(t.sand);
+});
 
 export default function App() {
   const [active, setActive] = useState(0);
   const [docked, setDocked] = useState(-1);
   const [phase, setPhase] = useState<Phase>('loading');
   const [loadProgress, setLoadProgress] = useState(0);
+  const [terrainId, setTerrainId] = useState(DEFAULT_TERRAIN);
   const headingRef = useRef(0);
   const posRef = useRef({ x: 0, z: 0 });
 
@@ -50,6 +60,7 @@ export default function App() {
         phase={phase}
         headingRef={headingRef}
         posRef={posRef}
+        terrainId={terrainId}
       />
       {phase === 'live' && (
         <>
@@ -57,6 +68,7 @@ export default function App() {
           <Nav active={active} docked={docked} count={stations.length} onGoTo={goTo} />
           <Compass headingRef={headingRef} />
           <Minimap posRef={posRef} headingRef={headingRef} docked={docked} />
+          <TerrainPicker terrainId={terrainId} onSelect={setTerrainId} />
         </>
       )}
       <Loader phase={phase} progress={loadProgress} />

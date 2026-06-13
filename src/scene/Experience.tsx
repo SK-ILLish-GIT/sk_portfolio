@@ -21,9 +21,10 @@ interface ExperienceProps {
   phase: Phase;
   headingRef: React.MutableRefObject<number>;
   posRef: React.MutableRefObject<{ x: number; z: number }>;
+  terrainId: string;
 }
 
-export default function Experience({ setActive, setDocked, phase, headingRef, posRef }: ExperienceProps) {
+export default function Experience({ setActive, setDocked, phase, headingRef, posRef, terrainId }: ExperienceProps) {
   const boatBody = useRef<RapierRigidBody | null>(null);
   const input = useKeyboard();
 
@@ -56,10 +57,10 @@ export default function Experience({ setActive, setDocked, phase, headingRef, po
           <CameraRig phase={phase} bodyRef={boatBody} />
 
           {stations.map((s, i) => {
-            const radius = s.id === 'hero' ? ISLAND.heroRadius : ISLAND.defaultRadius;
+            const radius = s.radius ?? (s.id === 'hero' ? ISLAND.heroRadius : ISLAND.defaultRadius);
             return (
               <group key={s.id}>
-                <Island position={s.position} accent={s.accent} seed={i + 1} radius={radius}>
+                <Island position={s.position} accent={s.accent} seed={i + 1} radius={radius} terrainId={terrainId}>
                   <StationProps id={s.id} accent={s.accent} phase={phase} />
                 </Island>
                 {/* static hull-blocking collider around the island's shoreline */}
