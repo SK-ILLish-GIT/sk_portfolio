@@ -3,81 +3,86 @@ import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { stations } from '../data/portfolio';
 import { OCEAN } from '../config/ocean';
-import { clamp01 } from '../lib/math';
-import { waveHeight } from '../lib/waves';
 
 // Size + center the sea to cover the whole archipelago (with generous margin),
 // however far the islands are scattered.
 const zsO = stations.map((s) => s.position[2]);
 const CENTER: [number, number, number] = [0, 0, (Math.max(...zsO) + Math.min(...zsO)) / 2];
-const LENGTH = Math.max(...zsO) - Math.min(...zsO) + 200;
+const LENGTH = Math.max(...zsO) - Math.min(...zsO) + 2 * OCEAN.margin;
 
-const WAVE_AMP = 0.22; // sum of wave amplitudes in lib/waves.ts
 const DEEP = new THREE.Color(OCEAN.deepColor);
 const SURF = new THREE.Color(OCEAN.surfaceColor);
-const FOAM = new THREE.Color('#d6f0fb');
-const smoothstep = (a: number, b: number, x: number) => {
-  const t = clamp01((x - a) / (b - a));
-  return t * t * (3 - 2 * t);
-};
+const f = (n: number) => n.toFixed(4);
 
 /**
- * Low-poly animated sea. A flat-shaded plane whose vertices are displaced each
- * frame by the shared `waveHeight` swell — the same function the boat bobs on,
- * so hull and water stay in sync. The plane lies in the X/Z world plane after a
- * -90° rotation, so wave height maps to the geometry's local Z component.
+ * Clean stylized sea: a flat plane shaded by a procedural animated cellular
+ * (voronoi) ripple — light cells with brighter rims drifting over a deep→shallow
+ * gradient. Flat geometry keeps it crisp (no choppy facets) and the standard
+ * material's fog fades the far water into the sky so no edge is ever visible.
  */
 export default function Ocean() {
-  const geomRef = useRef<THREE.PlaneGeometry>(null);
-  const base = useRef<Float32Array | null>(null);
+  const uTime = useRef({ value: 0 });
 
-  // Snapshot the flat plane's local positions once so we can re-displace from
-  // a clean baseline every frame, and seed a vertex-color buffer for the sea
-  // gradient + crest foam.
-  const { baseline, colors } = useMemo(() => {
-    const g = new THREE.PlaneGeometry(OCEAN.width, LENGTH, OCEAN.segmentsX, OCEAN.segmentsZ);
-    const positions = g.attributes.position.array.slice() as Float32Array;
-    return { baseline: positions, colors: new Float32Array(positions.length) };
+  const material = useMemo(() => {
+    const mat = new THREE.MeshStandardMaterial({ color: OCEAN.surfaceColor, roughness: 0.5, metalness: 0.04 });
+    mat.onBeforeCompile = (shader) => {
+      shader.uniforms.uTime = uTime.current;
+      shader.vertexShader = shader.vertexShader
+        .replace('#include <common>', '#include <common>\nvarying vec3 vWPos;')
+        .replace(
+          '#include <begin_vertex>',
+          '#include <begin_vertex>\nvWPos = (modelMatrix * vec4(transformed, 1.0)).xyz;',
+        );
+      shader.fragmentShader = shader.fragmentShader
+        .replace(
+          '#include <common>',
+          `#include <common>
+          varying vec3 vWPos;
+          uniform float uTime;
+          vec2 wHash(vec2 p){ p = vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3))); return fract(sin(p) * 43758.5453); }
+          // Voronoi returning F1 (nearest) and the F2-F1 edge gap (small at borders),
+          // with slowly drifting cell points → soft caustic veins.
+          vec2 wVoro(vec2 p){
+            vec2 n = floor(p); vec2 fr = fract(p);
+            float md1 = 8.0; float md2 = 8.0;
+            for (int j = -1; j <= 1; j++) {
+              for (int i = -1; i <= 1; i++) {
+                vec2 g = vec2(float(i), float(j));
+                vec2 o = wHash(n + g);
+                o = 0.5 + 0.5 * sin(uTime * ${f(OCEAN.rippleSpeed)} + 6.2831 * o);
+                float d = dot(g + o - fr, g + o - fr);
+                if (d < md1) { md2 = md1; md1 = d; } else if (d < md2) { md2 = d; }
+              }
+            }
+            return vec2(sqrt(md1), sqrt(md2) - sqrt(md1));
+          }`,
+        )
+        .replace(
+          '#include <color_fragment>',
+          `#include <color_fragment>
+          {
+            vec2 vo = wVoro(vWPos.xz * ${f(OCEAN.cellScale)});
+            vec3 deep = vec3(${f(DEEP.r)}, ${f(DEEP.g)}, ${f(DEEP.b)});
+            vec3 surf = vec3(${f(SURF.r)}, ${f(SURF.g)}, ${f(SURF.b)});
+            // Very soft, low-contrast base with faint caustic veins so the sea
+            // reads as a calm backdrop rather than grabbing focus.
+            vec3 col = mix(mix(surf, deep, 0.22), surf, smoothstep(0.0, 0.9, vo.x));
+            float vein = 1.0 - smoothstep(0.0, 0.10, vo.y);
+            col = mix(col, surf + vec3(0.06, 0.07, 0.08), vein * 0.25);
+            diffuseColor.rgb = col;
+          }`,
+        );
+    };
+    return mat;
   }, []);
 
   useFrame((state) => {
-    const geom = geomRef.current;
-    if (!geom) return;
-    if (!base.current) base.current = baseline;
-    const pos = geom.attributes.position;
-    const col = geom.attributes.color;
-    const arr = pos.array as Float32Array;
-    const carr = col.array as Float32Array;
-    const t = state.clock.getElapsedTime();
-    const [cx, , cz] = CENTER;
-
-    for (let k = 0; k < arr.length; k += 3) {
-      const lx = base.current[k];
-      const ly = base.current[k + 1];
-      // After the mesh's -90° X rotation: worldX = lx + cx, worldZ = -ly + cz.
-      const h = waveHeight(lx + cx, -ly + cz, t);
-      arr[k] = lx;
-      arr[k + 1] = ly;
-      arr[k + 2] = h;
-
-      // Deep troughs → surface → white foam on the crests.
-      const d = clamp01((h + WAVE_AMP) / (2 * WAVE_AMP));
-      const foam = smoothstep(0.74, 1, d) * 0.9;
-      carr[k] = THREE.MathUtils.lerp(THREE.MathUtils.lerp(DEEP.r, SURF.r, d), FOAM.r, foam);
-      carr[k + 1] = THREE.MathUtils.lerp(THREE.MathUtils.lerp(DEEP.g, SURF.g, d), FOAM.g, foam);
-      carr[k + 2] = THREE.MathUtils.lerp(THREE.MathUtils.lerp(DEEP.b, SURF.b, d), FOAM.b, foam);
-    }
-    pos.needsUpdate = true;
-    col.needsUpdate = true;
-    geom.computeVertexNormals();
+    uTime.current.value = state.clock.getElapsedTime();
   });
 
   return (
-    <mesh rotation={[-Math.PI / 2, 0, 0]} position={CENTER} receiveShadow>
-      <planeGeometry ref={geomRef} args={[OCEAN.width, LENGTH, OCEAN.segmentsX, OCEAN.segmentsZ]}>
-        <bufferAttribute attach="attributes-color" args={[colors, 3]} />
-      </planeGeometry>
-      <meshStandardMaterial vertexColors flatShading roughness={0.5} metalness={0.05} />
+    <mesh rotation={[-Math.PI / 2, 0, 0]} position={CENTER} receiveShadow material={material}>
+      <planeGeometry args={[OCEAN.width, LENGTH, 24, 32]} />
     </mesh>
   );
 }

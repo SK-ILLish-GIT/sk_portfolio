@@ -61,10 +61,11 @@ export const CAMERA_RIG = {
   /** Where the camera starts, out over the open sea, before the intro fly-in. */
   introFrom: [5, 18, 42] as Vec3,
   /** Chase offset from the boat: height, distance behind, and look-ahead distance.
-   *  Pulled back + raised for a wide, cinematic open-ocean view. */
-  chase: { up: 8.5, back: 16, lookAhead: 9 },
-  /** Where the camera looks (ahead of the boat) raised a touch. */
-  lookOffset: { y: 1.6 },
+   *  A balanced 3/4 sailing view — boat + islands + sky share the frame so the
+   *  water reads as the floor, not the subject (edge stays fogged out of view). */
+  chase: { up: 8, back: 14, lookAhead: 8 },
+  /** Where the camera looks (ahead of the boat), lifted toward the horizon. */
+  lookOffset: { y: 2.2 },
   /** Gentle camera bob so the horizon rocks with the swell (kept subtle). */
   bobGain: 0.18,
   parallax: { x: 1.2, y: 0.6 },

@@ -4,12 +4,20 @@
 // ============================================================================
 
 export const OCEAN = {
-  /** Plane width (x); length + center are derived from the island spread. */
-  width: 320,
-  segmentsX: 96,
-  segmentsZ: 120,
-  surfaceColor: '#2f97cf',
-  deepColor: '#1668a0',
+  /** Plane width (x); length + center are derived from the island spread.
+   *  Sized so every edge sits well beyond the fog distance — the water fades to
+   *  the sky color before the edge, so the mesh seam is never visible. */
+  width: 460,
+  segmentsX: 110,
+  segmentsZ: 150,
+  /** Margin added beyond the island span (each end) so the z-edges stay fogged. */
+  margin: 340,
+  surfaceColor: '#175a86',
+  deepColor: '#0a3a5a',
+  /** Cellular ripple density (larger = smaller, finer cells). */
+  cellScale: 1.0,
+  /** How fast the ripple/caustic pattern drifts (lower = calmer). */
+  rippleSpeed: 0.06,
 } as const;
 
 export const VOYAGE = {
