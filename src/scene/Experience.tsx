@@ -1,25 +1,32 @@
-import { Suspense } from 'react';
+import { Suspense, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { ScrollControls, AdaptiveDpr, Preload } from '@react-three/drei';
+import { AdaptiveDpr, Preload } from '@react-three/drei';
+import { Physics, RigidBody, CylinderCollider, type RapierRigidBody } from '@react-three/rapier';
 import * as THREE from 'three';
 import { stations } from '../data/portfolio';
-import { CAMERA, RENDERER, FOG, LIGHTS, SCROLL, ISLAND } from '../config/scene';
+import { CAMERA, RENDERER, FOG, LIGHTS, ISLAND } from '../config/scene';
 import type { Phase } from '../config/intro';
+import { useKeyboard } from '../hooks/useKeyboard';
 import Island from './Island';
 import StationProps from './props';
 import CameraRig from './CameraRig';
 import Clouds from './Clouds';
-import GuideCreature from './creatures/GuideCreature';
+import Ocean from './Ocean';
+import BoatController from './BoatController';
 
 interface ExperienceProps {
   active: number;
   setActive: (i: number) => void;
-  scrollTo: { index: number; nonce: number };
+  setDocked: (i: number) => void;
   phase: Phase;
-  creatureId: string;
+  headingRef: React.MutableRefObject<number>;
+  posRef: React.MutableRefObject<{ x: number; z: number }>;
 }
 
-export default function Experience({ setActive, scrollTo, phase, creatureId }: ExperienceProps) {
+export default function Experience({ setActive, setDocked, phase, headingRef, posRef }: ExperienceProps) {
+  const boatBody = useRef<RapierRigidBody | null>(null);
+  const input = useKeyboard();
+
   return (
     <Canvas
       shadows
@@ -45,19 +52,24 @@ export default function Experience({ setActive, scrollTo, phase, creatureId }: E
       />
 
       <Suspense fallback={null}>
-        <ScrollControls pages={stations.length} damping={SCROLL.damping}>
-          <CameraRig setActive={setActive} scrollTo={scrollTo} phase={phase} />
-          {stations.map((s, i) => (
-            <Island
-              key={s.id}
-              position={s.position}
-              accent={s.accent}
-              seed={i + 1}
-              radius={s.id === 'hero' ? ISLAND.heroRadius : ISLAND.defaultRadius}
-            >
-              <StationProps id={s.id} accent={s.accent} phase={phase} />
-            </Island>
-          ))}
+        <Physics gravity={[0, -9.81, 0]}>
+          <CameraRig phase={phase} bodyRef={boatBody} />
+
+          {stations.map((s, i) => {
+            const radius = s.id === 'hero' ? ISLAND.heroRadius : ISLAND.defaultRadius;
+            return (
+              <group key={s.id}>
+                <Island position={s.position} accent={s.accent} seed={i + 1} radius={radius}>
+                  <StationProps id={s.id} accent={s.accent} phase={phase} />
+                </Island>
+                {/* static hull-blocking collider around the island's shoreline */}
+                <RigidBody type="fixed" colliders={false} position={[s.position[0], 0, s.position[2]]}>
+                  <CylinderCollider args={[2.5, radius * 1.05]} />
+                </RigidBody>
+              </group>
+            );
+          })}
+
           {phase !== 'loading' && (
             <pointLight
               position={LIGHTS.heroAccent.position}
@@ -66,8 +78,20 @@ export default function Experience({ setActive, scrollTo, phase, creatureId }: E
               distance={LIGHTS.heroAccent.distance}
             />
           )}
-          <GuideCreature optionId={creatureId} phase={phase} accent={stations[0].accent} />
-        </ScrollControls>
+
+          <BoatController
+            phase={phase}
+            accent={stations[0].accent}
+            bodyRef={boatBody}
+            input={input}
+            headingRef={headingRef}
+            posRef={posRef}
+            onNearest={setActive}
+            onDock={setDocked}
+          />
+        </Physics>
+
+        <Ocean />
         <Clouds />
         <Preload all />
       </Suspense>

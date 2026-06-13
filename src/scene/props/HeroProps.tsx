@@ -1,41 +1,46 @@
-import { useRef } from 'react';
-import * as THREE from 'three';
-import { Sparkles, Text } from '@react-three/drei';
+import { useRef, useState } from 'react';
+import { Sparkles } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
+import { greetings } from '../../data/portfolio';
 import { INTRO, type Phase } from '../../config/intro';
+import { HERO_AVATAR, HERO_LAYOUT, HERO_PET } from '../../config/heroModels';
 import { smooth } from '../../lib/math';
-import { GlowMushroom, Tree } from '../components';
+import {
+  Banner,
+  GlowMushroom,
+  ModelFigure,
+  SpeechBubble,
+  Tree,
+  Workstation,
+  type BannerHandle,
+  type SpeechBubbleHandle,
+  type WorkstationHandle,
+} from '../components';
 
-const PILLAR_X = 1.85;
-
-/** The welcome gate: stone arch, hanging name plaque, lanterns, and flora. */
+/** Hero welcome scene: waving avatar, speech bubble, banner, workstation, and pet. */
 export default function HeroProps({ accent, phase = 'live' }: { accent: string; phase?: Phase }) {
   const startRef = useRef<number | null>(null);
-  const frameMat = useRef<THREE.MeshStandardMaterial>(null);
-  const vineL = useRef<THREE.MeshStandardMaterial>(null);
-  const vineR = useRef<THREE.MeshStandardMaterial>(null);
-  const keystoneMat = useRef<THREE.MeshStandardMaterial>(null);
-  const lanternMats = useRef<THREE.MeshStandardMaterial[]>([]);
-  const signLight = useRef<THREE.PointLight>(null);
+  const bannerRef = useRef<BannerHandle>(null);
+  const deskRef = useRef<WorkstationHandle>(null);
+  const bubbleRef = useRef<SpeechBubbleHandle>(null);
+  const [waveActive, setWaveActive] = useState(false);
 
   useFrame((state) => {
-    let glow = 1;
-    if (phase === 'loading') {
-      glow = 0;
-    } else {
+    let glow = 0;
+    if (phase !== 'loading') {
       if (startRef.current === null) startRef.current = state.clock.getElapsedTime();
       const t = state.clock.getElapsedTime() - startRef.current;
       glow = smooth((t - INTRO.glowStart) / (INTRO.glowEnd - INTRO.glowStart));
     }
-    if (frameMat.current) frameMat.current.emissiveIntensity = glow * 0.9;
-    if (vineL.current) vineL.current.emissiveIntensity = glow * 1.4;
-    if (vineR.current) vineR.current.emissiveIntensity = glow * 1.4;
-    if (keystoneMat.current) keystoneMat.current.emissiveIntensity = glow * 2.0;
-    lanternMats.current.forEach((m) => {
-      m.emissiveIntensity = 0.2 + glow * 1.1;
-    });
-    if (signLight.current) signLight.current.intensity = glow * 2.5;
+    bannerRef.current?.setGlow(glow);
+    deskRef.current?.setGlow(glow);
+    bubbleRef.current?.setOpacity(glow);
+
+    const shouldWave = phase === 'live' || glow > 0.95;
+    setWaveActive((prev) => (prev === shouldWave ? prev : shouldWave));
   });
+
+  const { avatar, bubble, banner, desk, pet, sparkles } = HERO_LAYOUT;
 
   return (
     <group>
@@ -47,135 +52,15 @@ export default function HeroProps({ accent, phase = 'live' }: { accent: string; 
         </mesh>
       ))}
 
-      {/* pillars */}
-      {[-PILLAR_X, PILLAR_X].map((x) => (
-        <group key={x} position={[x, 0, 0]}>
-          <mesh castShadow position={[0, 0.22, 0]}>
-            <boxGeometry args={[0.85, 0.44, 0.85]} />
-            <meshStandardMaterial color="#7a6a55" flatShading roughness={1} />
-          </mesh>
-          <mesh castShadow position={[0, 1.6, 0]}>
-            <cylinderGeometry args={[0.26, 0.34, 2.85, 8]} />
-            <meshStandardMaterial color="#b5a48d" flatShading roughness={1} />
-          </mesh>
-          <mesh castShadow position={[0, 3.15, 0]}>
-            <boxGeometry args={[0.7, 0.28, 0.7]} />
-            <meshStandardMaterial color="#9a8b72" flatShading />
-          </mesh>
-          <mesh position={[x < 0 ? 0.2 : -0.2, 1.5, 0.2]} rotation={[0, 0, x < 0 ? 0.22 : -0.22]}>
-            <cylinderGeometry args={[0.045, 0.045, 2.6, 5]} />
-            <meshStandardMaterial
-              ref={x < 0 ? vineL : vineR}
-              color="#3f7d4a"
-              emissive={accent}
-              emissiveIntensity={0}
-              flatShading
-            />
-          </mesh>
-          <mesh position={[0, 3.45, 0.28]}>
-            <boxGeometry args={[0.2, 0.26, 0.2]} />
-            <meshStandardMaterial
-              ref={(m) => {
-                if (m) lanternMats.current[x < 0 ? 0 : 1] = m;
-              }}
-              color={accent}
-              emissive={accent}
-              emissiveIntensity={0.2}
-              flatShading
-            />
-          </mesh>
-        </group>
-      ))}
+      <Banner ref={bannerRef} accent={accent} z={banner.z} />
 
-      {/* curved stone arch */}
-      <mesh castShadow position={[0, 3.55, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[2.05, 0.14, 8, 20, Math.PI]} />
-        <meshStandardMaterial color="#c4b59a" flatShading roughness={1} />
-      </mesh>
-      <mesh castShadow position={[0, 3.72, 0.08]} rotation={[0, Math.PI / 4, 0]}>
-        <octahedronGeometry args={[0.4, 0]} />
-        <meshStandardMaterial ref={keystoneMat} color={accent} emissive={accent} emissiveIntensity={0} flatShading />
-      </mesh>
+      <ModelFigure config={HERO_AVATAR} wave={waveActive} bob z={avatar.z} />
 
-      {/* hanging sign plaque */}
-      {[-0.55, 0.55].map((x) => (
-        <mesh key={x} position={[x, 3.05, 0.22]}>
-          <cylinderGeometry args={[0.03, 0.03, 0.45, 5]} />
-          <meshStandardMaterial color="#5c4326" flatShading />
-        </mesh>
-      ))}
-      <group position={[0, 2.35, 0.38]}>
-        <mesh castShadow position={[0, 0, -0.02]}>
-          <boxGeometry args={[2.9, 1.55, 0.14]} />
-          <meshStandardMaterial ref={frameMat} color="#3d2818" emissive={accent} emissiveIntensity={0} flatShading />
-        </mesh>
-        <mesh position={[0, 0, 0.03]}>
-          <boxGeometry args={[2.65, 1.35, 0.05]} />
-          <meshStandardMaterial color="#faf6ef" flatShading roughness={0.8} />
-        </mesh>
-        {/* metal corner studs */}
-        {[
-          [-1.22, 0.6],
-          [1.22, 0.6],
-          [-1.22, -0.6],
-          [1.22, -0.6],
-        ].map(([cx, cy], i) => (
-          <mesh key={i} position={[cx, cy, 0.07]}>
-            <sphereGeometry args={[0.05, 6, 6]} />
-            <meshStandardMaterial color="#8a7a62" metalness={0.4} roughness={0.5} />
-          </mesh>
-        ))}
-        <pointLight ref={signLight} position={[0, 0, 0.45]} color={accent} intensity={0} distance={5} />
+      <SpeechBubble ref={bubbleRef} accent={accent} messages={[...greetings]} x={bubble.x} y={bubble.y} z={bubble.z} />
 
-        <Text
-          position={[0, 0.52, 0.09]}
-          fontSize={0.13}
-          letterSpacing={0.22}
-          anchorX="center"
-          anchorY="middle"
-          color={accent}
-        >
-          WELCOME
-        </Text>
-        <Text
-          position={[0, 0.22, 0.09]}
-          fontSize={0.36}
-          anchorX="center"
-          anchorY="middle"
-          color="#1a1028"
-          outlineWidth={0.022}
-          outlineColor="#ffffff"
-        >
-          SK Sahil
-        </Text>
-        <Text
-          position={[0, -0.14, 0.09]}
-          fontSize={0.36}
-          anchorX="center"
-          anchorY="middle"
-          color="#1a1028"
-          outlineWidth={0.022}
-          outlineColor="#ffffff"
-        >
-          Parvez
-        </Text>
-        <mesh position={[0, -0.42, 0.09]}>
-          <boxGeometry args={[1.8, 0.025, 0.02]} />
-          <meshStandardMaterial color={accent} />
-        </mesh>
-        <Text
-          position={[0, -0.58, 0.09]}
-          fontSize={0.15}
-          letterSpacing={0.16}
-          anchorX="center"
-          anchorY="middle"
-          color={accent}
-          outlineWidth={0.008}
-          outlineColor="#ffffff"
-        >
-          SOFTWARE ENGINEER
-        </Text>
-      </group>
+      <Workstation ref={deskRef} accent={accent} x={desk.x} z={desk.z} rotation={desk.rotation} />
+
+      <ModelFigure config={HERO_PET} x={pet.x} z={pet.z} />
 
       {/* flora */}
       <Tree x={-3.5} z={-1.3} height={1.3} foliageColor="#45c486" />
@@ -187,7 +72,7 @@ export default function HeroProps({ accent, phase = 'live' }: { accent: string; 
         <Sparkles
           count={24}
           scale={[4.5, 3, 2.5]}
-          position={[0, 2.6, 0.4]}
+          position={[0, sparkles.y, sparkles.z]}
           size={1.6}
           speed={0.3}
           color={accent}

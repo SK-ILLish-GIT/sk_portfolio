@@ -1,20 +1,20 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Experience from './scene/Experience';
 import Overlay from './ui/Overlay';
 import Nav from './ui/Nav';
+import Compass from './ui/Compass';
+import Minimap from './ui/Minimap';
 import Loader from './ui/Loader';
 import { stations } from './data/portfolio';
 import { INTRO, LOADER_MS, type Phase } from './config/intro';
-import { DEFAULT_CREATURE } from './scene/creatures/creatures';
 
 export default function App() {
   const [active, setActive] = useState(0);
+  const [docked, setDocked] = useState(-1);
   const [phase, setPhase] = useState<Phase>('loading');
   const [loadProgress, setLoadProgress] = useState(0);
-  const [scrollTo, setScrollTo] = useState<{ index: number; nonce: number }>({
-    index: 0,
-    nonce: 0,
-  });
+  const headingRef = useRef(0);
+  const posRef = useRef({ x: 0, z: 0 });
 
   useEffect(() => {
     const start = performance.now();
@@ -38,21 +38,25 @@ export default function App() {
     return () => clearTimeout(toLive);
   }, [phase]);
 
-  const goTo = (index: number) => setScrollTo((s) => ({ index, nonce: s.nonce + 1 }));
+  // Fast-travel is added in a later phase; for now the boat is sailed manually.
+  const goTo = () => {};
 
   return (
     <>
       <Experience
         active={active}
         setActive={setActive}
-        scrollTo={scrollTo}
+        setDocked={setDocked}
         phase={phase}
-        creatureId={DEFAULT_CREATURE}
+        headingRef={headingRef}
+        posRef={posRef}
       />
       {phase === 'live' && (
         <>
-          <Overlay active={active} />
-          <Nav active={active} count={stations.length} onGoTo={goTo} />
+          <Overlay active={docked} />
+          <Nav active={active} docked={docked} count={stations.length} onGoTo={goTo} />
+          <Compass headingRef={headingRef} />
+          <Minimap posRef={posRef} headingRef={headingRef} docked={docked} />
         </>
       )}
       <Loader phase={phase} progress={loadProgress} />

@@ -52,6 +52,9 @@ export interface ContactLink {
   href: string;
 }
 
+/** Multilingual greetings cycled in the hero island speech bubble. */
+export const greetings = ['Hello', 'Namaste', 'Hola', 'Bonjour', 'Konnichiwa', 'Ciao'] as const;
+
 export const profile = {
   name: 'SK Sahil Parvez',
   title: 'Software Engineer',
@@ -184,7 +187,8 @@ export const contactLinks: ContactLink[] = [
 
 // ----------------------------------------------------------------------------
 // Layout: island position + accent color per station, in scroll order.
-// Islands zig-zag forward (negative Z) so the camera "flies" through them.
+// Islands sit on the sea (y = 0) and zig-zag forward (negative Z) so the boat
+// weaves between them as it sails the voyage.
 // ----------------------------------------------------------------------------
 export interface StationLayout {
   id: StationId;
@@ -196,11 +200,11 @@ export interface StationLayout {
 const Z_STEP = -18;
 export const stations: StationLayout[] = [
   { id: 'hero', label: 'Home', position: [0, 0, 0], accent: '#ff8fab' },
-  { id: 'about', label: 'About', position: [-7, 1.5, Z_STEP], accent: '#ffd166' },
-  { id: 'experience', label: 'Experience', position: [7, -1, Z_STEP * 2], accent: '#06d6a0' },
-  { id: 'projects', label: 'Projects', position: [-7, 2, Z_STEP * 3], accent: '#4cc9f0' },
-  { id: 'skills', label: 'Skills', position: [7, 0.5, Z_STEP * 4], accent: '#b5179e' },
-  { id: 'education', label: 'Education', position: [-6, -1.5, Z_STEP * 5], accent: '#f4a261' },
-  { id: 'certifications', label: 'Certs', position: [7, 1.5, Z_STEP * 6], accent: '#90be6d' },
+  { id: 'about', label: 'About', position: [-7, 0, Z_STEP], accent: '#ffd166' },
+  { id: 'experience', label: 'Experience', position: [7, 0, Z_STEP * 2], accent: '#06d6a0' },
+  { id: 'projects', label: 'Projects', position: [-7, 0, Z_STEP * 3], accent: '#4cc9f0' },
+  { id: 'skills', label: 'Skills', position: [7, 0, Z_STEP * 4], accent: '#b5179e' },
+  { id: 'education', label: 'Education', position: [-6, 0, Z_STEP * 5], accent: '#f4a261' },
+  { id: 'certifications', label: 'Certs', position: [7, 0, Z_STEP * 6], accent: '#90be6d' },
   { id: 'contact', label: 'Contact', position: [0, 0, Z_STEP * 7], accent: '#9b5de5' },
 ];
