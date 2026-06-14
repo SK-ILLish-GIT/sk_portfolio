@@ -20,6 +20,8 @@ interface BoatControllerProps {
   onNearest: (index: number) => void;
   /** Index of the island the boat is docked beside, or -1 when out at sea. */
   onDock: (index: number) => void;
+  /** When exploring an island the boat is frozen so the camera can frame it. */
+  exploring: number;
 }
 
 const FORWARD = new THREE.Vector3(0, 0, 1);
@@ -45,6 +47,7 @@ export default function BoatController({
   posRef,
   onNearest,
   onDock,
+  exploring,
 }: BoatControllerProps) {
   const model = useRef<THREE.Group>(null);
   const q = useRef(new THREE.Quaternion());
@@ -76,11 +79,12 @@ export default function BoatController({
     const fy = BOAT_PHYSICS.buoyancyK * (surfaceY - pos.y) - BOAT_PHYSICS.buoyancyC * lin.y;
     body.applyImpulse({ x: 0, y: fy * dt, z: 0 }, true);
 
-    // Controls only once we're sailing.
+    // Controls only once we're sailing — and frozen while exploring an island.
     const live = phase === 'live';
+    const frozen = exploring >= 0;
     const inp = input.current;
-    const throttle = live ? inp.forward : 0;
-    const steer = live ? inp.turn : 0;
+    const throttle = live && !frozen ? inp.forward : 0;
+    const steer = live && !frozen ? inp.turn : 0;
 
     if (throttle !== 0) {
       const power = BOAT_PHYSICS.thrust * (throttle > 0 ? throttle : throttle * BOAT_PHYSICS.reverseFactor) * dt;
@@ -90,8 +94,8 @@ export default function BoatController({
       body.applyTorqueImpulse({ x: 0, y: steer * BOAT_PHYSICS.turnTorque * dt, z: 0 }, true);
     }
 
-    // Anchor (Space) brakes hard; otherwise normal water drag.
-    body.setLinearDamping(inp.anchor && live ? BOAT_PHYSICS.anchorDamping : BOAT_PHYSICS.linearDamping);
+    // Anchor (Space) or explore mode brakes hard; otherwise normal water drag.
+    body.setLinearDamping((inp.anchor && live) || frozen ? BOAT_PHYSICS.anchorDamping : BOAT_PHYSICS.linearDamping);
 
     // Soft bounds — nudge back toward the playable sea if we wander too far.
     const pull = BOAT_PHYSICS.boundsPull * dt;

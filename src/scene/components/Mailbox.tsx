@@ -1,3 +1,4 @@
+import { Text } from '@react-three/drei';
 import { resolvePosition, type AccentProps, type PlacementProps } from './types';
 
 const DEFAULTS = {
@@ -11,14 +12,16 @@ export interface MailboxProps extends PlacementProps, AccentProps {
   postColor?: string;
   doorColor?: string;
   flagColor?: string;
+  label?: string;
 }
 
-/** Wooden-post mailbox with accent body, white door, and red flag. */
+/** Wooden-post mailbox with accent body, letters sticking out, and a label. */
 export function Mailbox({
   accent,
   postColor = DEFAULTS.postColor,
   doorColor = DEFAULTS.doorColor,
   flagColor = DEFAULTS.flagColor,
+  label = 'Hire Me',
   ...placement
 }: MailboxProps) {
   return (
@@ -43,6 +46,22 @@ export function Mailbox({
         <boxGeometry args={[0.3, 0.2, 0.02]} />
         <meshStandardMaterial color={flagColor} flatShading />
       </mesh>
+
+      {/* envelopes sticking out */}
+      {[
+        [0.05, 2.05, 0.52, 0.08],
+        [-0.12, 2.0, 0.54, -0.15],
+        [0.18, 1.95, 0.5, 0.22],
+      ].map(([x, y, z, ry], i) => (
+        <mesh key={i} position={[x, y, z]} rotation={[0.15, ry, 0]}>
+          <boxGeometry args={[0.22, 0.02, 0.14]} />
+          <meshStandardMaterial color="#f7f1e3" flatShading />
+        </mesh>
+      ))}
+
+      <Text position={[0, 1.9, 0.56]} fontSize={0.1} anchorX="center" anchorY="middle" color="#2a2a32">
+        {label}
+      </Text>
     </group>
   );
 }

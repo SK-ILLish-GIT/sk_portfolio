@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { useGLTF, useAnimations } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
-import { HERO_AVATAR, HERO_PET } from '../../config/heroModels';
+import { HERO_WORKSPACE } from '../../config/heroModels';
 import { resolvePosition, type PlacementProps } from './types';
 import type { Vec3 } from '../../types/three';
 
@@ -105,6 +105,5 @@ export function ModelFigure({ config, wave = false, bob = false, x, y, z, positi
   );
 }
 
-/** Preload hero GLBs so the welcome scene appears without pop-in. */
-useGLTF.preload(HERO_AVATAR.path);
-useGLTF.preload(HERO_PET.path);
+/** Preload the hero desk GLB so the welcome scene appears without pop-in. */
+useGLTF.preload(HERO_WORKSPACE.path);

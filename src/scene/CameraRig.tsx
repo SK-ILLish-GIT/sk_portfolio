@@ -2,13 +2,16 @@ import { useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
 import type { RapierRigidBody } from '@react-three/rapier';
-import { CAMERA_RIG } from '../config/scene';
+import { CAMERA_RIG, EXPLORE } from '../config/scene';
 import { INTRO, type Phase } from '../config/intro';
+import { stations } from '../data/portfolio';
 import { smooth } from '../lib/math';
 
 interface CameraRigProps {
   phase: Phase;
   bodyRef: React.MutableRefObject<RapierRigidBody | null>;
+  /** Index of the island being explored (camera frames it), or -1 to chase the boat. */
+  exploring: number;
 }
 
 const FORWARD = new THREE.Vector3(0, 0, 1);
@@ -18,7 +21,7 @@ const FORWARD = new THREE.Vector3(0, 0, 1);
  * looks slightly ahead, so you feel like you're sailing it. Reads the boat's
  * Rapier transform each frame and eases toward the ideal pose.
  */
-export default function CameraRig({ phase, bodyRef }: CameraRigProps) {
+export default function CameraRig({ phase, bodyRef, exploring }: CameraRigProps) {
   const { camera } = useThree();
   const introStart = useRef<number | null>(null);
   const introFrom = useMemo(() => new THREE.Vector3(...CAMERA_RIG.introFrom), []);
@@ -66,6 +69,17 @@ export default function CameraRig({ phase, bodyRef }: CameraRigProps) {
       chasePose(camTarget.current, lookTarget.current);
       camTarget.current.lerpVectors(introFrom, camTarget.current, k);
       camera.position.lerp(camTarget.current, CAMERA_RIG.introLerp);
+      camera.lookAt(lookTarget.current);
+      return;
+    }
+
+    // Explore mode: frame the chosen island in a steady 3/4 view.
+    if (exploring >= 0 && stations[exploring]) {
+      const [sx, , sz] = stations[exploring].position;
+      const f = EXPLORE.focus;
+      camTarget.current.set(sx + f.side, f.up, sz + f.back);
+      lookTarget.current.set(sx, f.lookY, sz);
+      camera.position.lerp(camTarget.current, f.lerp);
       camera.lookAt(lookTarget.current);
       return;
     }

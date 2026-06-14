@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import Experience from './scene/Experience';
-import Overlay from './ui/Overlay';
+import ExplorePrompt from './ui/ExplorePrompt';
 import Nav from './ui/Nav';
 import Compass from './ui/Compass';
 import Minimap from './ui/Minimap';
@@ -20,6 +20,7 @@ TERRAINS.forEach((t) => {
 export default function App() {
   const [active, setActive] = useState(0);
   const [docked, setDocked] = useState(-1);
+  const [exploring, setExploring] = useState(-1);
   const [phase, setPhase] = useState<Phase>('loading');
   const [loadProgress, setLoadProgress] = useState(0);
   const [terrainId, setTerrainId] = useState(DEFAULT_TERRAIN);
@@ -48,6 +49,20 @@ export default function App() {
     return () => clearTimeout(toLive);
   }, [phase]);
 
+  // E enters/leaves explore mode for the in-range island; Esc always leaves.
+  useEffect(() => {
+    if (phase !== 'live') return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.code === 'KeyE') {
+        setExploring((cur) => (cur >= 0 ? -1 : docked));
+      } else if (e.code === 'Escape') {
+        setExploring((cur) => (cur >= 0 ? -1 : cur));
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [phase, docked]);
+
   // Fast-travel is added in a later phase; for now the boat is sailed manually.
   const goTo = () => {};
 
@@ -56,7 +71,9 @@ export default function App() {
       <Experience
         active={active}
         setActive={setActive}
+        docked={docked}
         setDocked={setDocked}
+        exploring={exploring}
         phase={phase}
         headingRef={headingRef}
         posRef={posRef}
@@ -64,8 +81,8 @@ export default function App() {
       />
       {phase === 'live' && (
         <>
-          <Overlay active={docked} />
-          <Nav active={active} docked={docked} count={stations.length} onGoTo={goTo} />
+          <ExplorePrompt docked={docked} exploring={exploring} />
+          <Nav active={active} docked={docked} exploring={exploring} count={stations.length} onGoTo={goTo} />
           <Compass headingRef={headingRef} />
           <Minimap posRef={posRef} headingRef={headingRef} docked={docked} />
           <TerrainPicker terrainId={terrainId} onSelect={setTerrainId} />

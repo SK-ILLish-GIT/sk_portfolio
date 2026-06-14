@@ -5,6 +5,7 @@ import { Physics, RigidBody, CylinderCollider, type RapierRigidBody } from '@rea
 import * as THREE from 'three';
 import { stations } from '../data/portfolio';
 import { CAMERA, RENDERER, FOG, LIGHTS, ISLAND } from '../config/scene';
+import { BOAT_PHYSICS } from '../config/ocean';
 import type { Phase } from '../config/intro';
 import { useKeyboard } from '../hooks/useKeyboard';
 import Island from './Island';
@@ -13,18 +14,34 @@ import CameraRig from './CameraRig';
 import Clouds from './Clouds';
 import Ocean from './Ocean';
 import BoatController from './BoatController';
+import { ExploreRing } from './components';
 
 interface ExperienceProps {
   active: number;
   setActive: (i: number) => void;
+  docked: number;
   setDocked: (i: number) => void;
+  exploring: number;
   phase: Phase;
   headingRef: React.MutableRefObject<number>;
   posRef: React.MutableRefObject<{ x: number; z: number }>;
   terrainId: string;
 }
 
-export default function Experience({ setActive, setDocked, phase, headingRef, posRef, terrainId }: ExperienceProps) {
+function islandRadius(s: (typeof stations)[number]): number {
+  return s.radius ?? (s.id === 'hero' ? ISLAND.heroRadius : ISLAND.defaultRadius);
+}
+
+export default function Experience({
+  setActive,
+  docked,
+  setDocked,
+  exploring,
+  phase,
+  headingRef,
+  posRef,
+  terrainId,
+}: ExperienceProps) {
   const boatBody = useRef<RapierRigidBody | null>(null);
   const input = useKeyboard();
 
@@ -54,10 +71,10 @@ export default function Experience({ setActive, setDocked, phase, headingRef, po
 
       <Suspense fallback={null}>
         <Physics gravity={[0, -9.81, 0]}>
-          <CameraRig phase={phase} bodyRef={boatBody} />
+          <CameraRig phase={phase} bodyRef={boatBody} exploring={exploring} />
 
           {stations.map((s, i) => {
-            const radius = s.radius ?? (s.id === 'hero' ? ISLAND.heroRadius : ISLAND.defaultRadius);
+            const radius = islandRadius(s);
             return (
               <group key={s.id}>
                 <Island position={s.position} accent={s.accent} seed={i + 1} radius={radius} terrainId={terrainId}>
@@ -70,6 +87,21 @@ export default function Experience({ setActive, setDocked, phase, headingRef, po
               </group>
             );
           })}
+
+          {/* "Press E to explore" zones — hidden while already exploring an island */}
+          {phase === 'live' &&
+            exploring < 0 &&
+            stations.map((s, i) => (
+              <ExploreRing
+                key={`ring-${s.id}`}
+                accent={s.accent}
+                x={s.position[0]}
+                z={s.position[2]}
+                radius={islandRadius(s) * 1.05 + BOAT_PHYSICS.dockRange}
+                active={docked === i}
+                posRef={posRef}
+              />
+            ))}
 
           {phase !== 'loading' && (
             <pointLight
@@ -88,6 +120,7 @@ export default function Experience({ setActive, setDocked, phase, headingRef, po
             posRef={posRef}
             onNearest={setActive}
             onDock={setDocked}
+            exploring={exploring}
           />
         </Physics>
 

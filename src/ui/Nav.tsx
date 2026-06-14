@@ -3,12 +3,14 @@ import { profile, stations } from '../data/portfolio';
 interface NavProps {
   active: number;
   docked: number;
+  exploring: number;
   count: number;
   onGoTo: (index: number) => void;
 }
 
-export default function Nav({ active, docked, count, onGoTo }: NavProps) {
+export default function Nav({ active, docked, exploring, count, onGoTo }: NavProps) {
   const dockedStation = docked >= 0 ? stations[docked] : null;
+  const exploringStation = exploring >= 0 ? stations[exploring] : null;
   return (
     <>
       <div className="brand" style={{ opacity: active === 0 ? 0 : 1 }}>
@@ -35,8 +37,8 @@ export default function Nav({ active, docked, count, onGoTo }: NavProps) {
         Sail with WASD / arrows · Space to anchor · {count} islands
       </div>
 
-      <div className={`dock-status ${dockedStation ? 'is-docked' : ''}`}>
-        {dockedStation ? `⚓ Exploring ${dockedStation.label}` : ''}
+      <div className={`dock-status ${exploringStation ? 'is-docked' : ''}`}>
+        {exploringStation ? `⚓ Exploring ${exploringStation.label}` : ''}
       </div>
     </>
   );

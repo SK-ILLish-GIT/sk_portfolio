@@ -48,9 +48,10 @@ export const BOAT = {
 // ----------------------------------------------------------------------------
 export const BOAT_PHYSICS = {
   mass: 6,
-  /** Forward thrust impulse per second at full throttle (W); reverse is weaker. */
-  thrust: 34,
-  reverseFactor: 0.45,
+  /** Forward thrust impulse per second at full throttle (W); reverse is weaker.
+   *  Cranked up for dev — dial back before release. */
+  thrust: 320,
+  reverseFactor: 0.65,
   /** Yaw torque impulse per second (A/D). */
   turnTorque: 13,
   /** Water drag. */

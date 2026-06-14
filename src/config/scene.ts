@@ -53,6 +53,24 @@ export const ISLAND = {
   defaultRadius: 5.4,
 } as const;
 
+// Explore mode: when the boat enters an island's ring and presses E, the camera
+// shifts from the sailing chase view to a framed 3/4 view of that island.
+export const EXPLORE = {
+  /** Ring fade-in: invisible until the boat is within this many units of the
+   *  ring's outer edge, then ramps to full as you reach the zone. */
+  revealBand: 11,
+  focus: {
+    /** Camera offset from the island center while exploring (3/4 aerial view). */
+    side: 5,
+    up: 10,
+    back: 14,
+    /** Height of the look-at point above the island. */
+    lookY: 1.5,
+    /** Easing toward the focus pose (lower = slower, more cinematic). */
+    lerp: 0.05,
+  },
+} as const;
+
 // ----------------------------------------------------------------------------
 // Camera rig: a boat-riding chase cam. Sits behind + above the sailing boat
 // (which floats in front of each island) and keeps its gaze on the island.

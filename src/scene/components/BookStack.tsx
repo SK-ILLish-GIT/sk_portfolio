@@ -6,10 +6,12 @@ const PAGE = '#f7f1e3';
 export interface BookStackProps extends PlacementProps {
   count?: number;
   rotationY?: number;
+  /** Override default cover palette (one color per book). */
+  coverColors?: string[];
 }
 
 /** A leaning stack of chunky low-poly books. */
-export function BookStack({ count = 3, rotationY = 0, ...placement }: BookStackProps) {
+export function BookStack({ count = 3, rotationY = 0, coverColors, ...placement }: BookStackProps) {
   const books = Array.from({ length: count });
   let y = 0;
   return (
@@ -26,7 +28,11 @@ export function BookStack({ count = 3, rotationY = 0, ...placement }: BookStackP
             {/* cover */}
             <mesh castShadow>
               <boxGeometry args={[w, h, d]} />
-              <meshStandardMaterial color={COVERS[i % COVERS.length]} flatShading roughness={0.85} />
+              <meshStandardMaterial
+                color={(coverColors ?? COVERS)[i % (coverColors?.length ?? COVERS.length)]}
+                flatShading
+                roughness={0.85}
+              />
             </mesh>
             {/* page block (slightly inset, lighter) */}
             <mesh position={[0.02, 0, 0]}>
