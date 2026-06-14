@@ -6,7 +6,7 @@ import r3f from '@react-three/eslint-plugin';
 import prettier from 'eslint-config-prettier';
 
 export default tseslint.config(
-  { ignores: ['dist', 'node_modules', 'public', '*.config.js'] },
+  { ignores: ['dist', 'node_modules', 'public', 'scripts', '*.config.js'] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {

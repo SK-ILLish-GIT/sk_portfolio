@@ -14,7 +14,17 @@ import ContactProps from './ContactProps';
  * the objects that sit on its island; textual content lives in the HTML overlay
  * (except the hero gate, whose name is baked into the 3D sign).
  */
-export default function StationProps({ id, accent, phase = 'live' }: { id: StationId; accent: string; phase?: Phase }) {
+export default function StationProps({
+  id,
+  accent,
+  phase = 'live',
+  exploringActive = false,
+}: {
+  id: StationId;
+  accent: string;
+  phase?: Phase;
+  exploringActive?: boolean;
+}) {
   switch (id) {
     case 'hero':
       return <HeroProps accent={accent} phase={phase} />;
@@ -25,7 +35,7 @@ export default function StationProps({ id, accent, phase = 'live' }: { id: Stati
     case 'projects':
       return <ProjectsProps accent={accent} />;
     case 'skills':
-      return <SkillsProps accent={accent} />;
+      return <SkillsProps accent={accent} active={exploringActive} />;
     case 'education':
       return <EducationProps accent={accent} />;
     case 'certifications':

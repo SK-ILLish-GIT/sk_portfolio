@@ -1,13 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
 import Experience from './scene/Experience';
 import ExplorePrompt from './ui/ExplorePrompt';
+import SkillsHud from './ui/SkillsHud';
 import Nav from './ui/Nav';
 import Compass from './ui/Compass';
 import Minimap from './ui/Minimap';
 import TerrainPicker from './ui/TerrainPicker';
 import Loader from './ui/Loader';
 import { stations } from './data/portfolio';
+import { skillsGame } from './scene/skills/store';
 import { INTRO, LOADER_MS, type Phase } from './config/intro';
+
+const SKILLS_INDEX = stations.findIndex((s) => s.id === 'skills');
 import { DEFAULT_TERRAIN, TERRAINS } from './config/terrains';
 import { useTexture } from '@react-three/drei';
 
@@ -49,6 +53,15 @@ export default function App() {
     return () => clearTimeout(toLive);
   }, [phase]);
 
+  // Dev-only: ?e2e=skills skips the intro and opens the skills game for Playwright checks.
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+    if (new URLSearchParams(window.location.search).get('e2e') !== 'skills') return;
+    setPhase('live');
+    setExploring(SKILLS_INDEX);
+    setDocked(SKILLS_INDEX);
+  }, []);
+
   // E enters/leaves explore mode for the in-range island; Esc always leaves.
   useEffect(() => {
     if (phase !== 'live') return;
@@ -62,6 +75,11 @@ export default function App() {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [phase, docked]);
+
+  // Start the Skills game fresh each time you enter that island.
+  useEffect(() => {
+    if (exploring === SKILLS_INDEX) skillsGame.reset();
+  }, [exploring]);
 
   // Fast-travel is added in a later phase; for now the boat is sailed manually.
   const goTo = () => {};
@@ -82,6 +100,7 @@ export default function App() {
       {phase === 'live' && (
         <>
           <ExplorePrompt docked={docked} exploring={exploring} />
+          {exploring === SKILLS_INDEX && <SkillsHud />}
           <Nav active={active} docked={docked} exploring={exploring} count={stations.length} onGoTo={goTo} />
           <Compass headingRef={headingRef} />
           <Minimap posRef={posRef} headingRef={headingRef} docked={docked} />

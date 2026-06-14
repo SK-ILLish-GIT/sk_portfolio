@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
 import type { RapierRigidBody } from '@react-three/rapier';
 import { CAMERA_RIG, EXPLORE } from '../config/scene';
+import { SKILLS_GAME } from '../config/skillsGame';
 import { INTRO, type Phase } from '../config/intro';
 import { stations } from '../data/portfolio';
 import { smooth } from '../lib/math';
@@ -73,9 +74,19 @@ export default function CameraRig({ phase, bodyRef, exploring }: CameraRigProps)
       return;
     }
 
-    // Explore mode: frame the chosen island in a steady 3/4 view.
+    // Explore mode: frame the chosen island in a steady view.
     if (exploring >= 0 && stations[exploring]) {
-      const [sx, , sz] = stations[exploring].position;
+      const s = stations[exploring];
+      const [sx, , sz] = s.position;
+      if (s.id === 'skills') {
+        // Skills game wants a fixed above-and-behind framing of the fan.
+        const c = SKILLS_GAME.camera;
+        camTarget.current.set(sx + c.pos[0], c.pos[1], sz + c.pos[2]);
+        lookTarget.current.set(sx + c.look[0], c.look[1], sz + c.look[2]);
+        camera.position.lerp(camTarget.current, c.lerp);
+        camera.lookAt(lookTarget.current);
+        return;
+      }
       const f = EXPLORE.focus;
       camTarget.current.set(sx + f.side, f.up, sz + f.back);
       lookTarget.current.set(sx, f.lookY, sz);

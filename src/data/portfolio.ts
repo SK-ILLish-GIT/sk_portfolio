@@ -216,7 +216,7 @@ const stationMeta: Omit<StationLayout, 'position'>[] = [
   { id: 'about', label: 'About', accent: '#ffd166' },
   { id: 'experience', label: 'Experience', accent: '#06d6a0' },
   { id: 'projects', label: 'Projects', accent: '#4cc9f0' },
-  { id: 'skills', label: 'Skills', accent: '#b5179e' },
+  { id: 'skills', label: 'Skills', accent: '#b5179e', radius: 12 },
   { id: 'education', label: 'Education', accent: '#f4a261', radius: 9.5 },
   { id: 'certifications', label: 'Certs', accent: '#90be6d' },
   { id: 'contact', label: 'Contact', accent: '#9b5de5' },

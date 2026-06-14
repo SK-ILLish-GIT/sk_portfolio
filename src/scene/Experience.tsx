@@ -1,11 +1,13 @@
 import { Suspense, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { AdaptiveDpr, Preload } from '@react-three/drei';
-import { Physics, RigidBody, CylinderCollider, type RapierRigidBody } from '@react-three/rapier';
+import { Physics, RigidBody, CylinderCollider, ConvexHullCollider, type RapierRigidBody } from '@react-three/rapier';
 import * as THREE from 'three';
 import { stations } from '../data/portfolio';
 import { CAMERA, RENDERER, FOG, LIGHTS, ISLAND } from '../config/scene';
 import { BOAT_PHYSICS } from '../config/ocean';
+import { SKILLS_GAME } from '../config/skillsGame';
+import { shieldColliderPoints } from './islandShapes';
 import type { Phase } from '../config/intro';
 import { useKeyboard } from '../hooks/useKeyboard';
 import Island from './Island';
@@ -31,6 +33,14 @@ interface ExperienceProps {
 function islandRadius(s: (typeof stations)[number]): number {
   return s.radius ?? (s.id === 'hero' ? ISLAND.heroRadius : ISLAND.defaultRadius);
 }
+
+// Convex-hull floor + boat wall for the Skills shield (computed once).
+const SKILLS_HULL = shieldColliderPoints(
+  SKILLS_GAME.radius * 0.99,
+  (SKILLS_GAME.apexDeg * Math.PI) / 180,
+  SKILLS_GAME.topY,
+  SKILLS_GAME.colliderDepth,
+);
 
 export default function Experience({
   setActive,
@@ -70,20 +80,35 @@ export default function Experience({
       />
 
       <Suspense fallback={null}>
-        <Physics gravity={[0, -9.81, 0]}>
+        <Physics gravity={[0, -9.81, 0]} numSolverIterations={12} numAdditionalFrictionIterations={8}>
           <CameraRig phase={phase} bodyRef={boatBody} exploring={exploring} />
 
           {stations.map((s, i) => {
             const radius = islandRadius(s);
+            const isSkills = s.id === 'skills';
             return (
               <group key={s.id}>
-                <Island position={s.position} accent={s.accent} seed={i + 1} radius={radius} terrainId={terrainId}>
-                  <StationProps id={s.id} accent={s.accent} phase={phase} />
+                <Island
+                  position={s.position}
+                  accent={s.accent}
+                  seed={i + 1}
+                  radius={radius}
+                  terrainId={terrainId}
+                  shieldDeg={isSkills ? SKILLS_GAME.apexDeg : undefined}
+                >
+                  <StationProps id={s.id} accent={s.accent} phase={phase} exploringActive={exploring === i} />
                 </Island>
-                {/* static hull-blocking collider around the island's shoreline */}
-                <RigidBody type="fixed" colliders={false} position={[s.position[0], 0, s.position[2]]}>
-                  <CylinderCollider args={[2.5, radius * 1.05]} />
-                </RigidBody>
+                {/* Boat wall + crate floor. Skills uses a convex-hull shield that
+                    matches its shape; other islands use a simple cylinder. */}
+                {isSkills ? (
+                  <RigidBody type="fixed" colliders={false} position={[s.position[0], 0, s.position[2]]}>
+                    <ConvexHullCollider args={[SKILLS_HULL]} />
+                  </RigidBody>
+                ) : (
+                  <RigidBody type="fixed" colliders={false} position={[s.position[0], 0, s.position[2]]}>
+                    <CylinderCollider args={[2.5, radius * 1.05]} />
+                  </RigidBody>
+                )}
               </group>
             );
           })}

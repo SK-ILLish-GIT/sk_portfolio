@@ -129,8 +129,10 @@ export default function BoatController({
       onNearest(best);
     }
 
-    // Docked when within range of the nearest island's shoreline.
-    const radius = stations[best].id === 'hero' ? ISLAND.heroRadius : ISLAND.defaultRadius;
+    // Docked when within range of the nearest island's shoreline. Respect each
+    // island's radius override (e.g. the larger Skills island) so the dock zone
+    // matches its explore ring.
+    const radius = stations[best].radius ?? (stations[best].id === 'hero' ? ISLAND.heroRadius : ISLAND.defaultRadius);
     const dockRange = radius * 1.05 + BOAT_PHYSICS.dockRange;
     const docked = Math.sqrt(bestD) < dockRange ? best : -1;
     if (docked !== lastDock.current) {

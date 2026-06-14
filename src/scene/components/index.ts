@@ -1,5 +1,11 @@
 // Barrel export — import primitives from '../components' in station props.
 export { Tree, type TreeProps } from './Tree';
+export { TreeModel, type TreeModelProps } from './TreeModel';
+export { Bush, type BushProps } from './Bush';
+export { TNT, type TNTProps } from './TNT';
+export { Barrel, type BarrelProps } from './Barrel';
+export { HayBale, type HayBaleProps } from './HayBale';
+export { StaticBird, type StaticBirdProps } from './StaticBird';
 export { GlowMushroom, type GlowMushroomProps } from './GlowMushroom';
 export { Building, type BuildingProps } from './Building';
 export { BlockCharacter, type BlockCharacterProps } from './BlockCharacter';

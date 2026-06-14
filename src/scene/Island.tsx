@@ -4,6 +4,7 @@ import { useTexture } from '@react-three/drei';
 import { mulberry32 } from '../lib/prng';
 import { ISLAND } from '../config/scene';
 import { getTerrain } from '../config/terrains';
+import { buildShieldShape } from './islandShapes';
 import type { Vec3 } from '../types/three';
 
 interface IslandProps {
@@ -12,6 +13,9 @@ interface IslandProps {
   radius?: number;
   seed?: number;
   terrainId: string;
+  /** When set, the island is a "shield" with this apex (inscribed) angle in deg,
+   *  the pivot corner at the near (-Z) end and the arc body stretching to +Z. */
+  shieldDeg?: number;
   children?: ReactNode;
 }
 
@@ -72,8 +76,8 @@ function extrudeSlab(shape: THREE.Shape, depth: number, topY: number, bevel: num
  * (its short sides show green and overhang slightly) over a sand beach base —
  * the menawer-style grass lip + beach. Each island's outline differs by seed.
  */
-function makeIslandGeometries(radius: number, seed: number) {
-  const shape = buildShape(radius, seed);
+function makeIslandGeometries(radius: number, seed: number, shieldDeg?: number) {
+  const shape = shieldDeg ? buildShieldShape(radius, (shieldDeg * Math.PI) / 180) : buildShape(radius, seed);
   const grass = extrudeSlab(shape, GRASS_H, TOP_Y, 0.1);
   grass.scale(OVERHANG, 1, OVERHANG); // overhang the beach
   const sand = extrudeSlab(shape, DEPTH, TOP_Y - GRASS_H + 0.12, 0.35);
@@ -86,31 +90,37 @@ export default function Island({
   radius = ISLAND.defaultRadius,
   seed = 1,
   terrainId,
+  shieldDeg,
   children,
 }: IslandProps) {
   const terrain = getTerrain(terrainId);
 
   const { grassMap, sandMap } = useTexture({ grassMap: terrain.grass, sandMap: terrain.sand });
+  const stylized = terrain.stylized ?? false;
+  const grassRepeat = terrain.grassRepeat ?? (stylized ? 0.18 : 0.42);
   useMemo(() => {
     [grassMap, sandMap].forEach((t) => {
       t.wrapS = t.wrapT = THREE.RepeatWrapping;
-      // Cap/side UVs are in world units, so a small multiplier tiles a few times.
-      t.repeat.set(0.42, 0.42);
+      t.repeat.set(grassRepeat, grassRepeat);
       t.colorSpace = THREE.SRGBColorSpace;
-      t.anisotropy = 4;
+      t.anisotropy = stylized ? 1 : 4;
       t.needsUpdate = true;
     });
-  }, [grassMap, sandMap]);
+  }, [grassMap, sandMap, stylized, grassRepeat]);
 
-  const { grass: grassGeo, sand: sandGeo } = useMemo(() => makeIslandGeometries(radius, seed), [radius, seed]);
+  const accentLerp = terrain.grassAccentLerp ?? (stylized ? 0.04 : 0.22);
+  const grass = useMemo(() => {
+    const base = new THREE.Color(terrain.grassTint);
+    return base.lerp(new THREE.Color(accent), accentLerp);
+  }, [terrain.grassTint, accent, accentLerp]);
 
-  // Grass tinted by the theme + the island's accent so each island differs.
-  const grass = useMemo(
-    () => new THREE.Color(terrain.grassTint).lerp(new THREE.Color(accent), 0.22),
-    [terrain.grassTint, accent],
+  const { grass: grassGeo, sand: sandGeo } = useMemo(
+    () => makeIslandGeometries(radius, seed, shieldDeg),
+    [radius, seed, shieldDeg],
   );
 
   const bushes = useMemo(() => {
+    if (shieldDeg) return []; // keep the game field clear
     const rng = mulberry32(Math.floor(seed * 9973) + 7);
     return Array.from({ length: 5 }, () => {
       const angle = rng() * Math.PI * 2;
@@ -118,17 +128,22 @@ export default function Island({
       const s = 0.35 + rng() * 0.5;
       return { x: Math.cos(angle) * dist, z: Math.sin(angle) * dist, s, rocky: rng() > 0.6 };
     });
-  }, [radius, seed]);
+  }, [radius, seed, shieldDeg]);
 
   return (
     <group position={[position[0], 0, position[2]]}>
       {/* sand beach base */}
       <mesh geometry={sandGeo} castShadow receiveShadow>
-        <meshStandardMaterial map={sandMap} color={'#efe2c0'} roughness={1} />
+        <meshStandardMaterial
+          map={sandMap}
+          color={stylized ? '#d9cdb5' : '#efe2c0'}
+          roughness={1}
+          flatShading={stylized}
+        />
       </mesh>
       {/* grassy top slab — its short overhanging sides show green */}
       <mesh geometry={grassGeo} castShadow receiveShadow>
-        <meshStandardMaterial map={grassMap} color={grass} roughness={0.95} />
+        <meshStandardMaterial map={grassMap} color={grass} roughness={1} flatShading={stylized} />
       </mesh>
 
       {/* scattered bushes / rocks on the grass */}

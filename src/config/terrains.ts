@@ -1,7 +1,6 @@
 // ============================================================================
-// Selectable island ground themes (CC0 grass + sand textures from Poly Haven).
-// The dropdown swaps which pair every island uses. `grassTint` lightly recolors
-// the (darkish) grass texture so each theme reads distinctly.
+// Selectable island ground themes. Default cartoon grass from user textures;
+// Photo · * entries use Poly Haven textures.
 // ============================================================================
 
 export interface Terrain {
@@ -11,27 +10,28 @@ export interface Terrain {
   sand: string;
   /** Multiplied onto the grass texture (per-island accent is layered on top). */
   grassTint: string;
+  /** Flat-shaded stylized islands — softer repeat, cartoon sand color. */
+  stylized?: boolean;
+  /** How much each island's accent tints the grass (stylized defaults low). */
+  grassAccentLerp?: number;
+  /** UV tile scale for the grass map (stylized default 0.18). */
+  grassRepeat?: number;
 }
 
+const CARTOON_SAND = '/textures/sand-cartoon.jpg';
+const STYLIZED = { stylized: true as const, sand: CARTOON_SAND, grassAccentLerp: 0.02 };
+
 export const TERRAINS: Terrain[] = [
-  { id: 'meadow', label: 'Meadow', grass: '/textures/grass.jpg', sand: '/textures/sand.jpg', grassTint: '#aef0b2' },
-  { id: 'leafy', label: 'Leafy', grass: '/textures/grass-leafy.jpg', sand: '/textures/sand.jpg', grassTint: '#bdf0a0' },
   {
-    id: 'forest',
-    label: 'Forest',
-    grass: '/textures/grass-forest.jpg',
-    sand: '/textures/sand-coast.jpg',
-    grassTint: '#cdbf8f',
-  },
-  {
-    id: 'snow',
-    label: 'Snow',
-    grass: '/textures/grass-snow.jpg',
-    sand: '/textures/sand-coast.jpg',
-    grassTint: '#ffffff',
+    id: 'grass-canopy',
+    label: 'Grass · Canopy',
+    grass: '/textures/grass-canopy.png',
+    grassTint: '#a8b0a4',
+    grassRepeat: 0.2,
+    ...STYLIZED,
   },
 ];
 
-export const DEFAULT_TERRAIN = 'meadow';
+export const DEFAULT_TERRAIN = 'grass-canopy';
 
 export const getTerrain = (id: string) => TERRAINS.find((t) => t.id === id) ?? TERRAINS[0];
