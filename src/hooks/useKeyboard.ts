@@ -1,10 +1,7 @@
 import { useEffect, useRef } from 'react';
+import { sailingInput, type SailingInput } from '../scene/controls/sailingInput';
 
-export interface SailingInput {
-  forward: number; // W/Up - reverse with S/Down → -1..1
-  turn: number; // A/Left = +1 (port), D/Right = -1 (starboard)
-  anchor: boolean; // Space held → brake/anchor
-}
+export type { SailingInput };
 
 const KEYS = {
   forward: ['KeyW', 'ArrowUp'],
@@ -15,11 +12,10 @@ const KEYS = {
 } as const;
 
 /**
- * Tracks sailing keys and exposes a stable ref the physics loop can read each
- * frame without re-rendering. WASD / arrows steer + throttle; Space anchors.
+ * Tracks sailing keys and writes into the shared sailingInput singleton so the
+ * physics loop can read merged keyboard + touch input each frame.
  */
 export function useKeyboard() {
-  const input = useRef<SailingInput>({ forward: 0, turn: 0, anchor: false });
   const pressed = useRef<Set<string>>(new Set());
 
   useEffect(() => {
@@ -27,9 +23,9 @@ export function useKeyboard() {
       const p = pressed.current;
       const fwd = (KEYS.forward.some((k) => p.has(k)) ? 1 : 0) - (KEYS.back.some((k) => p.has(k)) ? 1 : 0);
       const turn = (KEYS.left.some((k) => p.has(k)) ? 1 : 0) - (KEYS.right.some((k) => p.has(k)) ? 1 : 0);
-      input.current.forward = fwd;
-      input.current.turn = turn;
-      input.current.anchor = KEYS.anchor.some((k) => p.has(k));
+      sailingInput.keyboard.forward = fwd;
+      sailingInput.keyboard.turn = turn;
+      sailingInput.keyboard.anchor = KEYS.anchor.some((k) => p.has(k));
     };
     const down = (e: KeyboardEvent) => {
       if (Object.values(KEYS).some((list) => (list as readonly string[]).includes(e.code))) {
@@ -53,8 +49,9 @@ export function useKeyboard() {
       window.removeEventListener('keydown', down);
       window.removeEventListener('keyup', up);
       window.removeEventListener('blur', blur);
+      sailingInput.keyboard.forward = 0;
+      sailingInput.keyboard.turn = 0;
+      sailingInput.keyboard.anchor = false;
     };
   }, []);
-
-  return input;
 }

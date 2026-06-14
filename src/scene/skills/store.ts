@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react';
+import { skillsControls } from './controls';
 
 export interface SkillsGameState {
   /** Total number of stacks (skill groups). */
@@ -75,6 +76,7 @@ export const skillsGame = {
     state.resetNonce += 1;
     state.yawDeg = DEFAULTS.yawDeg;
     state.power = DEFAULTS.power;
+    skillsControls.reset();
     emit();
   },
   subscribe: (f: () => void) => {

@@ -461,6 +461,10 @@ canvas {
   padding: 2px 8px;
   line-height: 1.25;
 }
+.explore-prompt-icon {
+  font-size: 16px;
+  line-height: 1;
+}
 
 /* ---- Skills game HUD ---- */
 .skills-hud {
@@ -490,58 +494,21 @@ canvas {
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.04em;
-}
-.skills-hud-reset {
-  pointer-events: auto;
-  cursor: pointer;
-  font: inherit;
-  font-size: 12px;
-  font-weight: 700;
-  color: #fff;
-  background: rgba(255, 255, 255, 0.18);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 999px;
-  padding: 4px 12px;
-  transition: background 0.2s ease;
-}
-.skills-hud-reset:hover {
-  background: rgba(255, 255, 255, 0.32);
-}
-.skills-hud-hint {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--ink);
-  background: rgba(255, 255, 255, 0.78);
-  padding: 5px 12px;
-  border-radius: 999px;
+  font-variant-numeric: tabular-nums;
 }
 .skills-hud-win {
-  font-size: 14px;
-  font-weight: 800;
-  letter-spacing: 0.02em;
-  color: #fff;
-  background: linear-gradient(90deg, rgba(181, 23, 158, 0.95), rgba(76, 201, 240, 0.95));
-  padding: 8px 18px;
-  border-radius: 999px;
-  box-shadow: 0 8px 22px rgba(10, 20, 40, 0.35);
+  font-size: 22px;
+  line-height: 1;
 }
 
 .skills-meter {
   display: flex;
   align-items: center;
-  gap: 10px;
   background: rgba(15, 23, 42, 0.82);
   padding: 7px 14px;
   border-radius: 999px;
   box-shadow: 0 8px 22px rgba(10, 20, 40, 0.35);
   backdrop-filter: blur(6px);
-}
-.skills-meter-label {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.75);
 }
 .skills-meter-track {
   width: 140px;
@@ -563,14 +530,49 @@ canvas {
   color: #fff;
   font-variant-numeric: tabular-nums;
 }
-.skills-hud-hint kbd {
-  font-family: var(--font-display, inherit);
-  font-size: 11px;
-  font-weight: 700;
-  background: rgba(0, 0, 0, 0.12);
-  border: 1px solid rgba(0, 0, 0, 0.18);
-  border-radius: 5px;
-  padding: 1px 6px;
+
+/* ---- Shared icon buttons (corner actions + touch) ---- */
+.icon-btn {
+  pointer-events: auto;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  font-size: 20px;
+  line-height: 1;
+  color: #fff;
+  background: rgba(15, 23, 42, 0.82);
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-radius: 14px;
+  box-shadow: 0 8px 22px rgba(10, 20, 40, 0.35);
+  touch-action: none;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  backdrop-filter: blur(6px);
+}
+.icon-btn-lg {
+  width: 52px;
+  height: 52px;
+  font-size: 22px;
+  border-radius: 16px;
+}
+.icon-btn:active {
+  transform: scale(0.94);
+}
+.corner-actions {
+  position: fixed;
+  right: clamp(16px, 4vw, 32px);
+  bottom: clamp(16px, 4vw, 32px);
+  z-index: 26;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 8px;
+  pointer-events: none;
+}
+.corner-actions.is-raised {
+  bottom: calc(clamp(16px, 4vw, 32px) + 60px);
 }
 
 /* ---- Compass HUD ---- */
@@ -777,6 +779,134 @@ canvas {
 
 @media (prefers-reduced-motion: reduce) {
   .scroll-hint .mouse::after {
+    animation: none;
+  }
+}
+
+/* ---- Rotate-to-landscape gate (touch portrait) ---- */
+.rotate-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(180deg, #0a1730 0%, #060d1c 100%);
+  color: #e8f4ff;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  pointer-events: auto;
+}
+.rotate-gate-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+  max-width: 320px;
+  padding: 24px;
+}
+.rotate-gate-icon {
+  color: #96ffeb;
+  animation: rotatePhone 2.4s ease-in-out infinite;
+}
+@keyframes rotatePhone {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(90deg);
+  }
+}
+.rotate-gate-title {
+  font-family: var(--font-display);
+  font-size: clamp(22px, 6vw, 28px);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+.rotate-gate-sub {
+  font-size: 14px;
+  color: rgba(232, 244, 255, 0.72);
+  line-height: 1.45;
+}
+
+/* ---- Touch boat controls ---- */
+.touch-controls {
+  position: fixed;
+  inset: 0;
+  z-index: 25;
+  pointer-events: none;
+  padding: env(safe-area-inset-top, 0) env(safe-area-inset-right, 0) env(safe-area-inset-bottom, 0)
+    env(safe-area-inset-left, 0);
+}
+.joystick {
+  position: relative;
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.45);
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  box-shadow: 0 8px 24px rgba(10, 20, 40, 0.35);
+  touch-action: none;
+}
+.joystick.touch-joystick {
+  position: absolute;
+  left: clamp(16px, 4vw, 32px);
+  bottom: clamp(16px, 4vw, 32px);
+  pointer-events: auto;
+  touch-action: none;
+}
+.joystick-knob {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.88);
+  border: 2px solid rgba(255, 255, 255, 0.95);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  pointer-events: none;
+}
+.touch-buttons {
+  position: absolute;
+  right: clamp(16px, 4vw, 32px);
+  bottom: clamp(16px, 4vw, 32px);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: auto;
+}
+.touch-btn-explore {
+  background: rgba(76, 201, 240, 0.85);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+.touch-btn-fire {
+  background: linear-gradient(180deg, #ff5a5f, #e63946);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+.touch-btn-anchor {
+  background: rgba(15, 23, 42, 0.88);
+}
+
+@media (orientation: landscape) and (max-height: 480px) {
+  .skills-hud {
+    top: clamp(8px, 2vw, 14px);
+    gap: 6px;
+  }
+  .skills-meter-track {
+    width: 100px;
+  }
+  .touch-joystick {
+    transform: scale(0.88);
+    transform-origin: bottom left;
+  }
+  .touch-buttons {
+    transform: scale(0.92);
+    transform-origin: bottom right;
+  }
+  .corner-actions.is-raised {
+    bottom: calc(clamp(16px, 4vw, 32px) + 54px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rotate-gate-icon {
     animation: none;
   }
 }

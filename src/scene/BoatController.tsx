@@ -8,12 +8,12 @@ import { BOAT, BOAT_PHYSICS } from '../config/ocean';
 import { SAILBOAT } from '../config/boats';
 import type { Phase } from '../config/intro';
 import { waveHeight } from '../lib/waves';
+import { sailingInput } from './controls/sailingInput';
 import { BoatModel } from './components';
 
 interface BoatControllerProps {
   phase: Phase;
   bodyRef: React.MutableRefObject<RapierRigidBody | null>;
-  input: React.MutableRefObject<{ forward: number; turn: number; anchor: boolean }>;
   headingRef: React.MutableRefObject<number>;
   /** Live boat XZ position for the minimap. */
   posRef: React.MutableRefObject<{ x: number; z: number }>;
@@ -42,7 +42,6 @@ const BOUNDS = {
 export default function BoatController({
   phase,
   bodyRef,
-  input,
   headingRef,
   posRef,
   onNearest,
@@ -82,7 +81,7 @@ export default function BoatController({
     // Controls only once we're sailing — and frozen while exploring an island.
     const live = phase === 'live';
     const frozen = exploring >= 0;
-    const inp = input.current;
+    const inp = sailingInput.read();
     const throttle = live && !frozen ? inp.forward : 0;
     const steer = live && !frozen ? inp.turn : 0;
 

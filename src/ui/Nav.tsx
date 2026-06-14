@@ -37,9 +37,7 @@ export default function Nav({ active, docked, exploring, count, onGoTo }: NavPro
         Sail with WASD / arrows · Space to anchor · {count} islands
       </div>
 
-      <div className={`dock-status ${exploringStation ? 'is-docked' : ''}`}>
-        {exploringStation ? `⚓ Exploring ${exploringStation.label}` : ''}
-      </div>
+      <div className={`dock-status ${exploringStation ? 'is-docked' : ''}`}>{exploringStation ? '⚓' : ''}</div>
     </>
   );
 }

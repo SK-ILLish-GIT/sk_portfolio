@@ -7,6 +7,7 @@ import { skillGroups } from '../../data/portfolio';
 import { SKILLS_GAME } from '../../config/skillsGame';
 import { getCrateTexture } from './crateTexture';
 import { skillsGame, useSkillsGame } from './store';
+import { skillsControls, POWER_FLOOR } from './controls';
 import { Cannon } from './Cannon';
 import { AngryBird } from './AngryBird';
 import { DustPoof } from './DustPoof';
@@ -114,7 +115,6 @@ function Stack({ items, color, position, rotationY, active, nonce, onClear, onBr
 const MUZZLE: Vec3 = [SKILLS_GAME.cannon.pos[0], SKILLS_GAME.cannon.muzzleY, SKILLS_GAME.cannon.pos[2]];
 const AIM_DEG_PER_SEC = 70;
 const CHARGE_PER_SEC = 1.3;
-const POWER_FLOOR = 0.15;
 
 function spawnFromVel(vel: Vec3): Vec3 {
   const len = Math.hypot(vel[0], vel[1], vel[2]) || 1;
@@ -192,37 +192,35 @@ export default function SkillsGame({ accent, active }: { accent: string; active:
   const aim = useMemo(() => ({ yaw: (yawDeg * Math.PI) / 180, pitch: SKILLS_GAME.launch.pitch }), [yawDeg]);
 
   // Keyboard: ← → aim, hold Space to charge power (ping-pong), release to fire.
-  const pressed = useRef<Set<string>>(new Set());
-  const charging = useRef(false);
-  const chargeDir = useRef(1);
+  const keys = useRef({ left: false, right: false });
 
   useEffect(() => {
     if (!active) return;
-    const keys = pressed.current;
+    skillsControls.setChargeGuard(() => {
+      const s = skillsGame.getState();
+      return !s.won && !birdRef.current;
+    });
     const onDown = (e: KeyboardEvent) => {
       if (e.code === 'Space') {
         e.preventDefault();
-        const s = skillsGame.getState();
-        if (!charging.current && !s.won && !birdRef.current) {
-          charging.current = true;
-          chargeDir.current = 1;
-          skillsGame.setPower(POWER_FLOOR);
-        }
-      } else if (e.code === 'ArrowLeft' || e.code === 'ArrowRight') {
-        keys.add(e.code);
+        skillsControls.beginCharge();
+      } else if (e.code === 'ArrowLeft') {
+        keys.current.left = true;
+        skillsControls.setKeyboardAim(keys.current.left, keys.current.right);
+      } else if (e.code === 'ArrowRight') {
+        keys.current.right = true;
+        skillsControls.setKeyboardAim(keys.current.left, keys.current.right);
       }
     };
     const onUp = (e: KeyboardEvent) => {
       if (e.code === 'Space') {
-        if (!charging.current) return;
-        charging.current = false;
-        const s = skillsGame.getState();
-        if (!s.won && !birdRef.current) {
-          const vel = aimVel(s.yawDeg, s.power);
-          setBird({ pos: spawnFromVel(vel), vel, key: performance.now() });
-        }
-      } else {
-        keys.delete(e.code);
+        skillsControls.endCharge();
+      } else if (e.code === 'ArrowLeft') {
+        keys.current.left = false;
+        skillsControls.setKeyboardAim(keys.current.left, keys.current.right);
+      } else if (e.code === 'ArrowRight') {
+        keys.current.right = false;
+        skillsControls.setKeyboardAim(keys.current.left, keys.current.right);
       }
     };
     window.addEventListener('keydown', onDown);
@@ -230,27 +228,39 @@ export default function SkillsGame({ accent, active }: { accent: string; active:
     return () => {
       window.removeEventListener('keydown', onDown);
       window.removeEventListener('keyup', onUp);
-      keys.clear();
-      charging.current = false;
+      keys.current = { left: false, right: false };
+      skillsControls.reset();
     };
   }, [active]);
+
+  const wasCharging = useRef(false);
 
   useFrame((_, dt) => {
     if (!active) return;
     const d = Math.min(dt, 1 / 30);
-    if (pressed.current.has('ArrowLeft')) skillsGame.aimBy(AIM_DEG_PER_SEC * d);
-    if (pressed.current.has('ArrowRight')) skillsGame.aimBy(-AIM_DEG_PER_SEC * d);
-    if (charging.current) {
-      let p = skillsGame.getState().power + chargeDir.current * CHARGE_PER_SEC * d;
+    const aimRate = skillsControls.getAimRate();
+    if (aimRate !== 0) skillsGame.aimBy(AIM_DEG_PER_SEC * d * aimRate);
+    if (skillsControls.isCharging()) {
+      let p = skillsGame.getState().power + skillsControls.getChargeDir() * CHARGE_PER_SEC * d;
       if (p >= 1) {
         p = 1;
-        chargeDir.current = -1;
+        skillsControls.setChargeDir(-1);
       } else if (p <= POWER_FLOOR) {
         p = POWER_FLOOR;
-        chargeDir.current = 1;
+        skillsControls.setChargeDir(1);
       }
       skillsGame.setPower(p);
     }
+
+    const charging = skillsControls.isCharging();
+    if (wasCharging.current && !charging) {
+      const s = skillsGame.getState();
+      if (!s.won && !birdRef.current) {
+        const vel = aimVel(s.yawDeg, s.power);
+        setBird({ pos: spawnFromVel(vel), vel, key: performance.now() });
+      }
+    }
+    wasCharging.current = charging;
   });
 
   // Drop the bird when leaving the island or resetting.

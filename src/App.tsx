@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Experience from './scene/Experience';
 import ExplorePrompt from './ui/ExplorePrompt';
 import SkillsHud from './ui/SkillsHud';
@@ -7,8 +7,12 @@ import Compass from './ui/Compass';
 import Minimap from './ui/Minimap';
 import TerrainPicker from './ui/TerrainPicker';
 import Loader from './ui/Loader';
+import RotateGate from './ui/RotateGate';
+import TouchControls from './ui/TouchControls';
+import CornerActions from './ui/CornerActions';
+import { useDeviceMode } from './hooks/useDeviceMode';
 import { stations } from './data/portfolio';
-import { skillsGame } from './scene/skills/store';
+import { skillsGame, useSkillsGame } from './scene/skills/store';
 import { INTRO, LOADER_MS, type Phase } from './config/intro';
 
 const SKILLS_INDEX = stations.findIndex((s) => s.id === 'skills');
@@ -30,6 +34,13 @@ export default function App() {
   const [terrainId, setTerrainId] = useState(DEFAULT_TERRAIN);
   const headingRef = useRef(0);
   const posRef = useRef({ x: 0, z: 0 });
+  const { isTouch, isPortrait } = useDeviceMode();
+  const { won: skillsWon } = useSkillsGame();
+  const touchBlocked = isTouch && isPortrait;
+
+  const toggleExplore = useCallback(() => {
+    setExploring((cur) => (cur >= 0 ? -1 : docked));
+  }, [docked]);
 
   useEffect(() => {
     const start = performance.now();
@@ -97,7 +108,7 @@ export default function App() {
         posRef={posRef}
         terrainId={terrainId}
       />
-      {phase === 'live' && (
+      {phase === 'live' && !touchBlocked && (
         <>
           <ExplorePrompt docked={docked} exploring={exploring} />
           {exploring === SKILLS_INDEX && <SkillsHud />}
@@ -105,9 +116,19 @@ export default function App() {
           <Compass headingRef={headingRef} />
           <Minimap posRef={posRef} headingRef={headingRef} docked={docked} />
           <TerrainPicker terrainId={terrainId} onSelect={setTerrainId} />
+          <CornerActions
+            exploring={exploring}
+            skillsIndex={SKILLS_INDEX}
+            onLeave={toggleExplore}
+            raised={isTouch && exploring === SKILLS_INDEX && !skillsWon}
+          />
+          {isTouch && (
+            <TouchControls docked={docked} exploring={exploring} skillsIndex={SKILLS_INDEX} onExplore={toggleExplore} />
+          )}
         </>
       )}
       <Loader phase={phase} progress={loadProgress} />
+      <RotateGate />
     </>
   );
 }

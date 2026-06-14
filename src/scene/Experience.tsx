@@ -53,7 +53,7 @@ export default function Experience({
   terrainId,
 }: ExperienceProps) {
   const boatBody = useRef<RapierRigidBody | null>(null);
-  const input = useKeyboard();
+  useKeyboard();
 
   return (
     <Canvas
@@ -140,7 +140,6 @@ export default function Experience({
           <BoatController
             phase={phase}
             bodyRef={boatBody}
-            input={input}
             headingRef={headingRef}
             posRef={posRef}
             onNearest={setActive}
