@@ -16,22 +16,35 @@ export interface Terrain {
   grassAccentLerp?: number;
   /** UV tile scale for the grass map (stylized default 0.18). */
   grassRepeat?: number;
+  /** Render the grass top with the procedural shader instead of a texture. */
+  shader?: boolean;
 }
 
 const CARTOON_SAND = '/textures/sand-cartoon.jpg';
-const STYLIZED = { stylized: true as const, sand: CARTOON_SAND, grassAccentLerp: 0.02 };
+const STYLIZED = { stylized: true as const, sand: CARTOON_SAND, grassAccentLerp: 0.04 };
 
 export const TERRAINS: Terrain[] = [
+  {
+    id: 'grass-shader',
+    label: 'Grass · Shader',
+    // `grass` is unused when `shader` is on, but kept valid so the loader is happy.
+    grass: '/textures/grass-canopy.png',
+    grassTint: '#5f9d52',
+    shader: true,
+    ...STYLIZED,
+  },
   {
     id: 'grass-canopy',
     label: 'Grass · Canopy',
     grass: '/textures/grass-canopy.png',
     grassTint: '#a8b0a4',
     grassRepeat: 0.2,
-    ...STYLIZED,
+    stylized: true,
+    sand: CARTOON_SAND,
+    grassAccentLerp: 0.02,
   },
 ];
 
-export const DEFAULT_TERRAIN = 'grass-canopy';
+export const DEFAULT_TERRAIN = 'grass-shader';
 
 export const getTerrain = (id: string) => TERRAINS.find((t) => t.id === id) ?? TERRAINS[0];

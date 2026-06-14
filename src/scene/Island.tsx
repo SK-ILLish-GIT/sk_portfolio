@@ -5,6 +5,7 @@ import { mulberry32 } from '../lib/prng';
 import { ISLAND } from '../config/scene';
 import { getTerrain } from '../config/terrains';
 import { buildShieldShape } from './islandShapes';
+import { createGrassMaterial } from './grassMaterial';
 import type { Vec3 } from '../types/three';
 
 interface IslandProps {
@@ -114,6 +115,12 @@ export default function Island({
     return base.lerp(new THREE.Color(accent), accentLerp);
   }, [terrain.grassTint, accent, accentLerp]);
 
+  // Procedural shader grass (no texture) when the terrain opts in.
+  const grassMat = useMemo(
+    () => (terrain.shader ? createGrassMaterial(grass, stylized) : null),
+    [terrain.shader, grass, stylized],
+  );
+
   const { grass: grassGeo, sand: sandGeo } = useMemo(
     () => makeIslandGeometries(radius, seed, shieldDeg),
     [radius, seed, shieldDeg],
@@ -142,8 +149,8 @@ export default function Island({
         />
       </mesh>
       {/* grassy top slab — its short overhanging sides show green */}
-      <mesh geometry={grassGeo} castShadow receiveShadow>
-        <meshStandardMaterial map={grassMap} color={grass} roughness={1} flatShading={stylized} />
+      <mesh geometry={grassGeo} castShadow receiveShadow {...(grassMat ? { material: grassMat } : {})}>
+        {grassMat ? null : <meshStandardMaterial map={grassMap} color={grass} roughness={1} flatShading={stylized} />}
       </mesh>
 
       {/* scattered bushes / rocks on the grass */}
