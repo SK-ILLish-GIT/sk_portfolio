@@ -19,8 +19,6 @@ import BoatController from './BoatController';
 import { ExploreRing } from './components';
 
 interface ExperienceProps {
-  active: number;
-  setActive: (i: number) => void;
   docked: number;
   setDocked: (i: number) => void;
   exploring: number;
@@ -43,7 +41,6 @@ const SKILLS_HULL = shieldColliderPoints(
 );
 
 export default function Experience({
-  setActive,
   docked,
   setDocked,
   exploring,
@@ -142,7 +139,6 @@ export default function Experience({
             bodyRef={boatBody}
             headingRef={headingRef}
             posRef={posRef}
-            onNearest={setActive}
             onDock={setDocked}
             exploring={exploring}
           />

@@ -54,9 +54,6 @@ export interface ContactLink {
   href: string;
 }
 
-/** Multilingual greetings cycled in the hero island speech bubble. */
-export const greetings = ['Hello', 'Namaste', 'Hola', 'Bonjour', 'Konnichiwa', 'Ciao'] as const;
-
 export const profile = {
   name: 'SK Sahil Parvez',
   title: 'Software Engineer',

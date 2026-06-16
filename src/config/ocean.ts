@@ -20,25 +20,12 @@ export const OCEAN = {
   rippleSpeed: 0.06,
 } as const;
 
-export const VOYAGE = {
-  /** How far in front of each island (toward the camera) the boat floats —
-   *  beyond the beach radius so it sits in open water, not on the sand. */
-  frontZ: 7.5,
-  /** Smoothing for the boat's heading as it turns between islands. */
-  headingLerp: 0.05,
-} as const;
-
 export const BOAT = {
-  scale: 1,
-  /** Wave bob coupling + idle rock/pitch. */
-  bobGain: 1,
+  /** Idle rock/pitch applied to the boat model. */
   rollAmp: 0.06,
   rollSpeed: 1.3,
   pitchAmp: 0.045,
   pitchSpeed: 1.05,
-  /** Extra roll when turning into a new heading. */
-  bankGain: 1.6,
-  bankLerp: 0.06,
 } as const;
 
 // ----------------------------------------------------------------------------

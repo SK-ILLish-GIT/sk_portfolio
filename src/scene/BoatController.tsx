@@ -17,7 +17,6 @@ interface BoatControllerProps {
   headingRef: React.MutableRefObject<number>;
   /** Live boat XZ position for the minimap. */
   posRef: React.MutableRefObject<{ x: number; z: number }>;
-  onNearest: (index: number) => void;
   /** Index of the island the boat is docked beside, or -1 when out at sea. */
   onDock: (index: number) => void;
   /** When exploring an island the boat is frozen so the camera can frame it. */
@@ -39,20 +38,11 @@ const BOUNDS = {
  * are faked on the model for stability); a buoyancy spring keeps it on the
  * swell, thrust/steer come from the keyboard, and water drag damps it.
  */
-export default function BoatController({
-  phase,
-  bodyRef,
-  headingRef,
-  posRef,
-  onNearest,
-  onDock,
-  exploring,
-}: BoatControllerProps) {
+export default function BoatController({ phase, bodyRef, headingRef, posRef, onDock, exploring }: BoatControllerProps) {
   const model = useRef<THREE.Group>(null);
   const q = useRef(new THREE.Quaternion());
   const forward = useRef(new THREE.Vector3());
   const lean = useRef(0);
-  const lastNearest = useRef(-1);
   const lastDock = useRef(-2);
 
   useFrame((state, delta) => {
@@ -112,7 +102,7 @@ export default function BoatController({
       model.current.rotation.x = Math.sin(t * BOAT.pitchSpeed) * BOAT.pitchAmp - throttle * 0.05;
     }
 
-    // Report the nearest island so the overlay can show its content.
+    // Find the nearest island (used for docking detection).
     let best = 0;
     let bestD = Infinity;
     for (let i = 0; i < stations.length; i++) {
@@ -122,10 +112,6 @@ export default function BoatController({
         bestD = d;
         best = i;
       }
-    }
-    if (best !== lastNearest.current) {
-      lastNearest.current = best;
-      onNearest(best);
     }
 
     // Docked when within range of the nearest island's shoreline. Respect each

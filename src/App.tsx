@@ -25,7 +25,6 @@ useTexture.preload(defaultTerrain.grass);
 useTexture.preload(defaultTerrain.sand);
 
 export default function App() {
-  const [active, setActive] = useState(0);
   const [docked, setDocked] = useState(-1);
   const [exploring, setExploring] = useState(-1);
   const [phase, setPhase] = useState<Phase>('loading');
@@ -108,14 +107,9 @@ export default function App() {
     if (exploring === SKILLS_INDEX) skillsGame.reset();
   }, [exploring]);
 
-  // Fast-travel is added in a later phase; for now the boat is sailed manually.
-  const goTo = () => {};
-
   return (
     <>
       <Experience
-        active={active}
-        setActive={setActive}
         docked={docked}
         setDocked={setDocked}
         exploring={exploring}
@@ -127,7 +121,7 @@ export default function App() {
       {phase === 'live' && !touchBlocked && (
         <>
           {exploring === SKILLS_INDEX && <SkillsHud />}
-          <Nav active={active} docked={docked} count={stations.length} onGoTo={goTo} />
+          <Nav docked={docked} count={stations.length} />
           {exploring < 0 && !sectionDetailOpen && (
             <IslandActions
               docked={docked}
