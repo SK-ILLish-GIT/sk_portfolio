@@ -1,6 +1,5 @@
 // ============================================================================
-// Selectable island ground themes. Default cartoon grass from user textures;
-// Photo · * entries use Poly Haven textures.
+// Island ground theme — procedural grass shader (finalized).
 // ============================================================================
 
 export interface Terrain {
@@ -32,16 +31,6 @@ export const TERRAINS: Terrain[] = [
     grassTint: '#5f9d52',
     shader: true,
     ...STYLIZED,
-  },
-  {
-    id: 'grass-canopy',
-    label: 'Grass · Canopy',
-    grass: '/textures/grass-canopy.png',
-    grassTint: '#a8b0a4',
-    grassRepeat: 0.2,
-    stylized: true,
-    sand: CARTOON_SAND,
-    grassAccentLerp: 0.02,
   },
 ];
 

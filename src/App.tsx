@@ -1,29 +1,28 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Experience from './scene/Experience';
-import ExplorePrompt from './ui/ExplorePrompt';
 import SkillsHud from './ui/SkillsHud';
 import Nav from './ui/Nav';
 import Compass from './ui/Compass';
 import Minimap from './ui/Minimap';
-import TerrainPicker from './ui/TerrainPicker';
 import Loader from './ui/Loader';
 import RotateGate from './ui/RotateGate';
+import ResumeViewer from './ui/ResumeViewer';
+import SectionDetailModal from './ui/SectionDetailModal';
+import IslandActions from './ui/IslandActions';
 import TouchControls from './ui/TouchControls';
 import CornerActions from './ui/CornerActions';
 import { useDeviceMode } from './hooks/useDeviceMode';
-import { stations } from './data/portfolio';
+import { stations, profile } from './data/portfolio';
 import { skillsGame, useSkillsGame } from './scene/skills/store';
 import { INTRO, LOADER_MS, type Phase } from './config/intro';
 
 const SKILLS_INDEX = stations.findIndex((s) => s.id === 'skills');
-import { DEFAULT_TERRAIN, TERRAINS } from './config/terrains';
+import { DEFAULT_TERRAIN, getTerrain } from './config/terrains';
 import { useTexture } from '@react-three/drei';
 
-// Preload every terrain's textures so switching in the dropdown is instant.
-TERRAINS.forEach((t) => {
-  useTexture.preload(t.grass);
-  useTexture.preload(t.sand);
-});
+const defaultTerrain = getTerrain(DEFAULT_TERRAIN);
+useTexture.preload(defaultTerrain.grass);
+useTexture.preload(defaultTerrain.sand);
 
 export default function App() {
   const [active, setActive] = useState(0);
@@ -31,7 +30,8 @@ export default function App() {
   const [exploring, setExploring] = useState(-1);
   const [phase, setPhase] = useState<Phase>('loading');
   const [loadProgress, setLoadProgress] = useState(0);
-  const [terrainId, setTerrainId] = useState(DEFAULT_TERRAIN);
+  const [resumeOpen, setResumeOpen] = useState(false);
+  const [sectionDetailOpen, setSectionDetailOpen] = useState(false);
   const headingRef = useRef(0);
   const posRef = useRef({ x: 0, z: 0 });
   const { isTouch, isPortrait } = useDeviceMode();
@@ -73,19 +73,35 @@ export default function App() {
     setDocked(SKILLS_INDEX);
   }, []);
 
+  const islandForDetails = exploring >= 0 ? exploring : docked;
+
   // E enters/leaves explore mode for the in-range island; Esc always leaves.
   useEffect(() => {
     if (phase !== 'live') return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.code === 'KeyE') {
-        setExploring((cur) => (cur >= 0 ? -1 : docked));
-      } else if (e.code === 'Escape') {
+      if (e.code === 'Escape') {
+        if (resumeOpen) {
+          setResumeOpen(false);
+          return;
+        }
+        if (sectionDetailOpen) {
+          setSectionDetailOpen(false);
+          return;
+        }
         setExploring((cur) => (cur >= 0 ? -1 : cur));
+      } else if (e.code === 'KeyE') {
+        setExploring((cur) => (cur >= 0 ? -1 : docked));
+      } else if (e.code === 'KeyI') {
+        if (islandForDetails >= 0) setSectionDetailOpen((cur) => !cur);
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [phase, docked]);
+  }, [phase, docked, islandForDetails, resumeOpen, sectionDetailOpen]);
+
+  useEffect(() => {
+    if (islandForDetails < 0) setSectionDetailOpen(false);
+  }, [islandForDetails]);
 
   // Start the Skills game fresh each time you enter that island.
   useEffect(() => {
@@ -106,29 +122,51 @@ export default function App() {
         phase={phase}
         headingRef={headingRef}
         posRef={posRef}
-        terrainId={terrainId}
+        terrainId={DEFAULT_TERRAIN}
       />
       {phase === 'live' && !touchBlocked && (
         <>
-          <ExplorePrompt docked={docked} exploring={exploring} />
           {exploring === SKILLS_INDEX && <SkillsHud />}
-          <Nav active={active} docked={docked} exploring={exploring} count={stations.length} onGoTo={goTo} />
+          <Nav active={active} docked={docked} count={stations.length} onGoTo={goTo} />
+          {exploring < 0 && !sectionDetailOpen && (
+            <IslandActions
+              docked={docked}
+              isTouch={isTouch}
+              onExplore={toggleExplore}
+              onDetails={() => setSectionDetailOpen(true)}
+            />
+          )}
           <Compass headingRef={headingRef} />
           <Minimap posRef={posRef} headingRef={headingRef} docked={docked} />
-          <TerrainPicker terrainId={terrainId} onSelect={setTerrainId} />
           <CornerActions
             exploring={exploring}
             skillsIndex={SKILLS_INDEX}
             onLeave={toggleExplore}
+            onDetails={() => setSectionDetailOpen(true)}
             raised={isTouch && exploring === SKILLS_INDEX && !skillsWon}
           />
-          {isTouch && (
-            <TouchControls docked={docked} exploring={exploring} skillsIndex={SKILLS_INDEX} onExplore={toggleExplore} />
-          )}
+          {isTouch && <TouchControls exploring={exploring} skillsIndex={SKILLS_INDEX} />}
         </>
       )}
       <Loader phase={phase} progress={loadProgress} />
       <RotateGate />
+      {phase !== 'loading' && (
+        <>
+          <div className="brand">
+            {profile.name}
+            <span>{profile.title}</span>
+          </div>
+          <button type="button" className="resume-trigger" aria-label="Open resume" onClick={() => setResumeOpen(true)}>
+            Resume
+          </button>
+        </>
+      )}
+      <ResumeViewer open={resumeOpen} onClose={() => setResumeOpen(false)} />
+      <SectionDetailModal
+        open={sectionDetailOpen}
+        stationIndex={islandForDetails}
+        onClose={() => setSectionDetailOpen(false)}
+      />
     </>
   );
 }

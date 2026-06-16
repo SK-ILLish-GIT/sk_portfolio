@@ -8,7 +8,6 @@ const KEYS = {
   back: ['KeyS', 'ArrowDown'],
   left: ['KeyA', 'ArrowLeft'],
   right: ['KeyD', 'ArrowRight'],
-  anchor: ['Space'],
 } as const;
 
 /**
@@ -25,11 +24,9 @@ export function useKeyboard() {
       const turn = (KEYS.left.some((k) => p.has(k)) ? 1 : 0) - (KEYS.right.some((k) => p.has(k)) ? 1 : 0);
       sailingInput.keyboard.forward = fwd;
       sailingInput.keyboard.turn = turn;
-      sailingInput.keyboard.anchor = KEYS.anchor.some((k) => p.has(k));
     };
     const down = (e: KeyboardEvent) => {
       if (Object.values(KEYS).some((list) => (list as readonly string[]).includes(e.code))) {
-        if (e.code === 'Space') e.preventDefault();
         pressed.current.add(e.code);
         recompute();
       }
@@ -51,7 +48,6 @@ export function useKeyboard() {
       window.removeEventListener('blur', blur);
       sailingInput.keyboard.forward = 0;
       sailingInput.keyboard.turn = 0;
-      sailingInput.keyboard.anchor = false;
     };
   }, []);
 }

@@ -68,6 +68,10 @@ export const profile = {
     'pipelines, and scalable microservices architecture.',
 };
 
+/** Google Drive preview URL for the latest resume PDF. */
+export const resumeUrl = 'https://drive.google.com/file/d/1-fRSXu7BvFQNBZUGMZgdnIIxkuTJz-hW/preview';
+export const resumeViewUrl = 'https://drive.google.com/file/d/1-fRSXu7BvFQNBZUGMZgdnIIxkuTJz-hW/view';
+
 export const experience: ExperienceItem[] = [
   {
     company: 'Highspot',

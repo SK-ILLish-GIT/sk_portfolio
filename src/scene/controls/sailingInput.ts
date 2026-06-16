@@ -1,7 +1,6 @@
 export interface SailingInput {
   forward: number;
   turn: number;
-  anchor: boolean;
 }
 
 type PartialInput = Partial<SailingInput>;
@@ -22,12 +21,10 @@ export const sailingInput = {
     return {
       forward: touchActive ? val(touch.forward) : val(keyboard.forward),
       turn: touchActive ? val(touch.turn) : val(keyboard.turn),
-      anchor: (keyboard.anchor ?? false) || (touch.anchor ?? false),
     };
   },
   resetTouch() {
     touch.forward = 0;
     touch.turn = 0;
-    touch.anchor = false;
   },
 };

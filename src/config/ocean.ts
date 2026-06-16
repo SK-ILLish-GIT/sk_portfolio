@@ -57,7 +57,7 @@ export const BOAT_PHYSICS = {
   /** Water drag. */
   linearDamping: 1.4,
   angularDamping: 2.4,
-  /** Anchor (Space) ramps damping up to brake quickly. */
+  /** Explore mode ramps damping up to brake the boat quickly. */
   anchorDamping: 6,
   /** Buoyancy spring toward the wave surface: stiffness k, damping c. */
   buoyancyK: 60,

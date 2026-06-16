@@ -93,8 +93,8 @@ export default function BoatController({
       body.applyTorqueImpulse({ x: 0, y: steer * BOAT_PHYSICS.turnTorque * dt, z: 0 }, true);
     }
 
-    // Anchor (Space) or explore mode brakes hard; otherwise normal water drag.
-    body.setLinearDamping((inp.anchor && live) || frozen ? BOAT_PHYSICS.anchorDamping : BOAT_PHYSICS.linearDamping);
+    // Explore mode brakes hard to settle the boat; otherwise normal water drag.
+    body.setLinearDamping(frozen ? BOAT_PHYSICS.anchorDamping : BOAT_PHYSICS.linearDamping);
 
     // Soft bounds — nudge back toward the playable sea if we wander too far.
     const pull = BOAT_PHYSICS.boundsPull * dt;

@@ -4,12 +4,13 @@ interface CornerActionsProps {
   exploring: number;
   skillsIndex: number;
   onLeave: () => void;
-  /** Lift icons above touch button stack (Fire / Anchor). */
+  onDetails: () => void;
+  /** Lift icons above touch button stack (Fire). */
   raised?: boolean;
 }
 
-/** Bottom-right icon actions — Leave while exploring, Reset on Skills island. */
-export default function CornerActions({ exploring, skillsIndex, onLeave, raised }: CornerActionsProps) {
+/** Bottom-right icon actions while exploring — Details, Reset (skills), Leave. */
+export default function CornerActions({ exploring, skillsIndex, onLeave, onDetails, raised }: CornerActionsProps) {
   if (exploring < 0) return null;
 
   return (
@@ -21,6 +22,9 @@ export default function CornerActions({ exploring, skillsIndex, onLeave, raised 
       )}
       <button type="button" className="icon-btn" aria-label="Leave island" onClick={onLeave}>
         ↩
+      </button>
+      <button type="button" className="icon-btn" aria-label="Section info" onClick={onDetails}>
+        📄
       </button>
     </div>
   );

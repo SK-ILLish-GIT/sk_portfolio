@@ -5,14 +5,12 @@ import { skillsGame, useSkillsGame } from '../scene/skills/store';
 import Joystick from './Joystick';
 
 interface TouchControlsProps {
-  docked: number;
   exploring: number;
   skillsIndex: number;
-  onExplore: () => void;
 }
 
 /** On-screen touch controls for sailing and the Skills mini-game. */
-export default function TouchControls({ docked, exploring, skillsIndex, onExplore }: TouchControlsProps) {
+export default function TouchControls({ exploring, skillsIndex }: TouchControlsProps) {
   const { won } = useSkillsGame();
   const inSkills = exploring === skillsIndex;
 
@@ -24,13 +22,6 @@ export default function TouchControls({ docked, exploring, skillsIndex, onExplor
   const onAimJoy = useCallback((x: number) => {
     skillsControls.setTouchAimX(x);
   }, []);
-
-  const onAnchorDown = () => {
-    sailingInput.touch.anchor = true;
-  };
-  const onAnchorUp = () => {
-    sailingInput.touch.anchor = false;
-  };
 
   const onFireDown = () => {
     if (!skillsControls.isCharging() && !skillsGame.getState().won) {
@@ -69,29 +60,6 @@ export default function TouchControls({ docked, exploring, skillsIndex, onExplor
   return (
     <div className="touch-controls">
       <Joystick onChange={onSailJoy} className="touch-joystick" />
-      <div className="touch-buttons">
-        {docked >= 0 && (
-          <button
-            type="button"
-            className="icon-btn icon-btn-lg touch-btn-explore"
-            aria-label="Explore island"
-            onClick={onExplore}
-          >
-            🏝
-          </button>
-        )}
-        <button
-          type="button"
-          className="icon-btn icon-btn-lg touch-btn-anchor"
-          aria-label="Anchor"
-          onPointerDown={onAnchorDown}
-          onPointerUp={onAnchorUp}
-          onPointerLeave={onAnchorUp}
-          onPointerCancel={onAnchorUp}
-        >
-          ⚓
-        </button>
-      </div>
     </div>
   );
 }
